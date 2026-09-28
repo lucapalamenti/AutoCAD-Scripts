@@ -9,8 +9,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (vl-load-com)
-(load "scripts/utility.lsp")
-(load "scripts/ApplyToAll.lsp")
+(load "AutoCAD-Scripts/utility.lsp")
+(load "AutoCAD-Scripts/ApplyToAll.lsp")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; FILE SPECIFIC GLOBAL VARIABLES
@@ -46,14 +46,91 @@
 ;;; FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Replaces and copies all attributes from the current title block to a correctly formatted one
-(defun c:ReplaceBMSShopTitleBlock (/)
-  (ReplaceBlockReference (GetTitleBlock) *ShopDWGTitleBlockPath*)
-  (princ "- Replaced Title Block\n")
+;; Moves title block to PAPER space and formats it
+;; Options: ShopBMS, PanelBMS
+(defun c:FormatTitleBlock (/)
+  (FormatTitleBlock_Helper nil)
+  (princ)
+)
+(defun FormatTitleBlock_Helper (choice /)
+  (if (null choice)
+    (progn
+      ;; Title Block options
+      (initget "ShopBMS PanelBMS")
+      ;; Prompt user
+      (setq choice (getkword "\nSelect action [ShopBMS/PanelBMS]: "))
+    )
+  )
+  
+  ;; Handle selection
+  (cond
+    ((= choice "ShopBMS")
+      (FormatTitleBlock 1.0 1.0)
+    )
+    ((= choice "PanelBMS")
+      (FormatTitleBlock 0.5 0.5)
+    )
+  )
+)
+(defun FormatTitleBlock (ScaleX ScaleY / ent ss obj insPt)
+  (command "_.MSPACE")
+
+  ; Move Title block to PAPER space and center it
+  (setq ent (GetTitleBlock))
+  (setq ss (ssadd ent (ssadd)))
+  (if (> (sslength ss) 0)
+    (progn
+      (command "_.CHSPACE" ss "" "P")
+      (setq obj (vlax-ename->vla-object ent))
+      
+      ; Set the block reference properties
+      (setq insPt (vlax-get obj 'InsertionPoint))
+
+      (vla-Move
+        obj
+        (vlax-3d-point insPt)
+        (vlax-3d-point '(0 0 0))
+      )
+
+      (vla-put-XScaleFactor obj ScaleX)
+      (vla-put-YScaleFactor obj ScaleY)
+      (vla-put-ZScaleFactor obj 1.0)
+      
+      (princ "\n Title block insertion point updated to (0,0).")
+    )
+    (princ "\nNo block reference found in the drawing.")
+  )
   (princ)
 )
 
-; Returns the ENAME of the Title Block entity
+;; Replaces and copies all attributes from the current title block to a correctly formatted one
+;; Options: ShopBMS
+(defun c:ReplaceTitleBlock (/)
+  (ReplaceTitleBlock_Helper nil)
+  (princ)
+)
+(defun ReplaceTitleBlock (choice /)
+  (if (null choice)
+    (progn
+      ;; Title Block options
+      (initget "ShopBMS")
+      ;; Prompt user
+      (setq choice (getkword "\nSelect action [ShopBMS]: "))
+    )
+  )
+  
+  ;; Handle selection
+  (cond
+    ((= choice "ShopBMS")
+      (ReplaceBlockReference (GetTitleBlock) *ShopDWGTitleBlockPath*)
+    )
+  )
+
+  (princ (strcat "Replaced " choice " Title Block\n"))
+  (princ)
+)
+
+;; Returns the ENAME of the Title Block entity
 (defun GetTitleBlock (/ ss i ent obj blkName result)
   (setq ss (ssget "_X" '((0 . "INSERT"))))
   (if ss
@@ -77,7 +154,7 @@
   result
 )
 
-; Wrapper function for commandline call
+;; Wrapper function for commandline call
 (defun c:UpdateTitleBlockAttributes (/)
   (UpdateTitleBlockAttributes)
   (princ)

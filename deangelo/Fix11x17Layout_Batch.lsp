@@ -1,5 +1,4 @@
 (vl-load-com)
-(load "scripts/GlobalVariables.lsp")
 
 ;; ============================================================
 ;; FIX 11x17 LAYOUT - SINGLE DRAWING + RECURSIVE FOLDER BATCH
@@ -314,5 +313,4 @@
   (princ)
 )
 
-(princ "\nFix11x17Layout_Batch loaded. Commands: FIX11X17 and FIX11X17FOLDER")
 (princ)
