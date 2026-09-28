@@ -35,6 +35,7 @@
 ;; Loads all scripts in the same directory is itself
 ;; Does NOT skip the Main.lsp file itself so that it can load itself into memory 
 ;; when updates are made
+;; @param folder [string] filepath for a directory
 (defun LoadAllScripts (folder / item fullPath)
   (foreach item (vl-directory-files folder nil 0)
     (setq fullPath (strcat folder item))
