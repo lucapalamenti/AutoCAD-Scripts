@@ -1,12 +1,12 @@
+
+(vl-load-com)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; PAGE SETUP FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Configures the Layout
 (defun c:SetupLayout (/ doc lay)
-  (setvar "TILEMODE" 0)
-  (command "_.MSPACE")
-  
   (setq doc (vla-get-ActiveDocument (vlax-get-acad-object)))
 
   ; Make sure we're not in the "Model" tab (different than MODEL space)
@@ -66,6 +66,8 @@
       ; Get the first (and only) viewport
       (setq ent (ssname ss 0))
       (setq obj (vlax-ename->vla-object ent))
+
+      (vla-put-DisplayLocked obj :vlax-true)
 
       ; Create a center point with X=8.5, Y=5.5
       (vla-put-Center obj (vlax-3d-point 8.5 5.5 0))
@@ -152,7 +154,7 @@
   (princ)
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; TEXT FORMATTING FUNCTIONS
+;;; TEXT FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Converts all TEXT objects to MTEXT

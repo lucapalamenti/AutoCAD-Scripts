@@ -110,27 +110,3 @@
 
   (princ)
 )
-
-; Returns the ENAME of the Title Block entity
-(defun GetTitleBlock (/ ss i ent obj blkName result)
-  (setq ss (ssget "_X" '((0 . "INSERT"))))
-  (if ss
-    (progn
-      (setq i 0)
-      (while (< i (sslength ss))
-        (setq ent (ssname ss i)
-              obj (vlax-ename->vla-object ent)
-              blkName (strcase (vla-get-EffectiveName obj)))
-        ; If the Block Reference's name is the title block's name
-        (if (member blkName *valid-title-block-names*)
-          (progn
-            (setq result ent)
-            (setq i (sslength ss)) ; exit loop
-          )
-          (setq i (1+ i))
-        )
-      )
-    )
-  )
-  result
-)

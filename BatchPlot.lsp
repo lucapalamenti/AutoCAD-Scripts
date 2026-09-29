@@ -2,7 +2,7 @@
 ;;; IMPORTS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(load "AutoCAD-Scripts/Main.lsp")
+(vl-load-com)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; FILE SPECIFIC GLOBAL VARIABLES
@@ -44,7 +44,7 @@
       (write-line (strcat "[DWF6Sheet:" file "]") dsdfp)
       (write-line (strcat "DWG=" folder "\\" file) dsdfp)
       (write-line "Layout=Layout1" dsdfp)
-      ; (write-line (strcat "Setup=Monochrome|" *MONOCHROME_FILEPATH*) dsdfp)
+      (write-line (strcat "Setup=Monochrome|" *MONOCHROME_FILEPATH*) dsdfp)
     )
 
     (write-line "[Target]" dsdfp)
@@ -101,7 +101,7 @@
 (defun GetLeafFolders (directory / subFolders result)
   (setq subFolders
     (mapcar
-      '(lambda (x) (strcat directory "\\" x))
+      '(lambda (x) (strcat (vl-string-right-trim "\\" directory) "\\" x))
       (vl-remove-if
         '(lambda (x) (member x '("." "..")))
         (vl-directory-files directory nil -1)

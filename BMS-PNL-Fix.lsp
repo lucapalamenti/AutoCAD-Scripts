@@ -21,7 +21,7 @@
 ;;; IMPORTS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(load "AutoCAD-Scripts/Main.lsp")
+(vl-load-com)
 (load "AutoCAD-Scripts/utility.lsp")
 (load "AutoCAD-Scripts/TitleBlock.lsp")
 (load "AutoCAD-Scripts/RevHelp.lsp")
@@ -45,17 +45,34 @@
   (FormatTitleBlock_Helper "ShopBMS")
   ; Move all objects to the Model workspace
   (c:MoveObjectsToModel)
-  ; Convert all TEXT objects to MTEXT objects
-  (c:Text2MText)
-  ; Apply a BG mask to all text based objects
-  (c:MaskText)
-  ; Apply certain text formatting to all MText objects
-  (c:StyleMText)
-  ; Order objects so that some are in front of others
-  (c:OrderObjects)
+  ; ; Convert all TEXT objects to MTEXT objects
+  ; (c:Text2MText)
+  ; ; Apply a BG mask to all text based objects
+  ; (c:MaskText)
+  ; ; Apply certain text formatting to all MText objects
+  ; (c:StyleMText)
+  ; ; Order objects so that some are in front of others
+  ; (c:OrderObjects)
 
   (command "_.REGEN")
 
+  (princ)
+)
+
+(defun c:BMSPanelBorderFix (/)
+  (BMSPanelFix_Helper)
+  ; (ApplyToAll
+  ;   *TEST_DIR*
+  ;   'BMSPanelFix_Helper
+  ;   nil
+  ; )
+  (princ)
+)
+(defun BMSPanelFix_Helper (/)
+  (c:SetupLayout)
+  (c:FixViewport)
+  (FormatTitleBlock_Helper "PanelBMS")
+  (c:MoveObjectsToModel)
   (princ)
 )
 

@@ -73,19 +73,24 @@
   )
 )
 (defun FormatTitleBlock (ScaleX ScaleY / ent ss obj insPt)
+  (princ "Start: FormatTitleBlock\n")
   (command "_.MSPACE")
-
   ; Move Title block to PAPER space and center it
   (setq ent (GetTitleBlock))
   (setq ss (ssadd ent (ssadd)))
+  (princ "WHAT2\n")
   (if (> (sslength ss) 0)
     (progn
-      (command "_.CHSPACE" ss "" "P")
+      (if (= 1 (cdr (assoc 67 (entget ent))))
+        (princ "\nAlready in Paper Space.")
+        (command "_.CHSPACE" ss "" "P")
+      )
+      
       (setq obj (vlax-ename->vla-object ent))
       
       ; Set the block reference properties
-      (setq insPt (vlax-get obj 'InsertionPoint))
 
+      (setq insPt (vlax-get obj 'InsertionPoint))
       (vla-Move
         obj
         (vlax-3d-point insPt)
@@ -100,6 +105,7 @@
     )
     (princ "\nNo block reference found in the drawing.")
   )
+  (princ "End: FormatTitleBlock\n")
   (princ)
 )
 
@@ -132,8 +138,9 @@
 
 ;; Returns the ENAME of the Title Block entity
 (defun GetTitleBlock (/ ss i ent obj blkName result)
+  (princ "Finding title block.\n")
   (setq ss (ssget "_X" '((0 . "INSERT"))))
-  (if ss
+  (if (> (sslength ss) 0)
     (progn
       (setq i 0)
       (while (< i (sslength ss))
@@ -145,11 +152,13 @@
           (progn
             (setq result ent)
             (setq i (sslength ss)) ; exit loop
+            (princ "Title block found.\n")
           )
           (setq i (1+ i))
         )
       )
     )
+    (princ "No title block found.\n")
   )
   result
 )
