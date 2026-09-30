@@ -10,7 +10,7 @@
 ;;; FOLDERS
 
 (setq *MAIN_DIR*
-  "C:\\Users\\luca.palamenti\\OneDrive - RoviSys\\Documents\\AutoCAD\\")
+  "C:\\Users\\luca.palamenti\\OneDrive - RoviSys\\Documents\\AutoCAD\\luca\\")
 (setq *TX_NUM*
   "TX309\\")
 (setq *BMS_CP_DWGS*
