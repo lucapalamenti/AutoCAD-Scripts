@@ -1,0 +1,61 @@
+Useful Acronyms/Abbreviations TX3 Rev0
+
+ADM:  Admin
+AHU:  Air Handling Unit
+BMS:  Building Management System
+BOH:  Back of House?
+BOM:  Bill of Materials
+CCS:  Cable and Conduit Schedule
+CDU:  Coolant Distribution Unit
+CH:   Chiller
+CHWP: Chilled Water Pump
+CHWR: Chilled Water Return
+CP:   Chiller Plants / Control Panel
+CRAC: Computer Room Air Conditioning
+CRAH: Computer Room Air Handler
+CU:   Cooling Unit
+CV:   Control Valve
+CX:   Skids
+DOAS: Dedicated Outdoor Air Systems
+DM:   Data Module
+EF:   Exhaust Fan
+EOR:  Engineer Of Record
+EPMS: Electrical Power Monitoring System
+ER:   Electrical Room
+FACP: Fire Alarm Control Panels
+FM:   Flow Meter
+FPB:  Fan Powered Box
+FWU:  Fan Wall Unit
+GEN:  Generator
+GWY:  Gateway
+HAC:  Hot Aisle Containment
+HAPP: Hot Aisle Containment Auxiliary Power Panel
+HRIO: Hot Aisle Containment Remote Input/Output
+HSUP: Hot Aisle Supervisors
+HUM:  Humidifier
+IFC:  Issued for Construction
+IFR:  Issued for Review
+IOL:  Input/Output List
+JACE: ?? Appears in NA 8.003
+LD:   Leak Detection
+LDZ:  Leak Detection Zone
+MECH: Mechanical Gallery
+MD:   Motorized Damper
+MMR:  Meet Me Room
+NA:   Network Architecture
+PDU:  Power Distribution Unit
+PNL:  Panel
+POE:  Point of Entry
+REC:  Recloser
+RIO:  Remote Input/Output
+RPP:  Remote Power Panel
+RTU:  Remote Terminal Unit
+SUP:  Supervisor
+TCMU: Temperature Control Monitoring Unit
+TCS:  Technical Cooling System
+TFO:  
+THS:  Temperature and Humidity Sensor
+UPS:  Uninterruptible Power Supply
+VAV:  Variable Air Volume
+VFD:  Variable Frequency Drive
+XMFR: Transformer
