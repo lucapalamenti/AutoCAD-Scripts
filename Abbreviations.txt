@@ -58,4 +58,4 @@ THS:  Temperature and Humidity Sensor
 UPS:  Uninterruptible Power Supply
 VAV:  Variable Air Volume
 VFD:  Variable Frequency Drive
-XMFR: Transformer
+XFMR: Transformer
