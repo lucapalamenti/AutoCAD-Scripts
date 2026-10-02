@@ -2,22 +2,45 @@
 (vl-load-com)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; PAGE SETUP FUNCTIONS
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; OBJECT GET FUNCTIONS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Configures the Layout
-(defun c:SetupLayout (/ doc lay)
-    (setq doc (vla-get-ActiveDocument (vlax-get-acad-object)))
+;; Returns the active document
+;; @returns [#<VLA-OBJECT IAcadDocument>]
+(defun GetActiveDoc (/) (vla-get-ActiveDocument (vlax-get-acad-object)))
 
-    ; Make sure we're not in the "Model" tab (different than MODEL space)
-    ; Find the layout tab at index 1 and set the selected tab to it
+;; Returns the layout tab at the given index for a given document. "Model" is always index 0.
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+;; @param index [INT] tab index
+;; @returns [#<VLA-OBJECT IAcadLayout>]
+(defun GetLayoutTab (doc index / lay layout)
     (vlax-for lay (vla-get-Layouts doc)
-        (if (= (vla-get-TabOrder lay) 1)
-            (setvar "CTAB" (vla-get-Name lay))
+        (if (= (vla-get-TabOrder lay) index)
+            (setq layout (vla-item (vla-get-Layouts doc) "Layout1"))
         )
     )
+    layout
+)
 
-    (setq lay (vla-get-ActiveLayout doc))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; PAGE SETUP FUNCTIONS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Configures the size and positioning of a page
+(defun c:SetupPageLayout (/)
+    (SetupPageLayout (GetActiveDoc))
+    (princ)
+)
+;; Configures the size and positioning of a page
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+(defun SetupPageLayout (doc / lay)
+    ; Make sure doc is defined
+    (if (null doc)
+        (setq doc (GetActiveDoc))
+    )
+
+    (setq lay (GetLayoutTab doc 1))
+
     (vla-RefreshPlotDeviceInfo lay)
     ; Set Printer/plotter name
     (vla-put-ConfigName lay "AutoCAD PDF (General Documentation).pc3")
@@ -57,28 +80,31 @@
 
 ;; Make sure the VIEWPORT is ordered, centered, & sized correctly
 (defun c:FixViewport (/ ss ent obj)
-    ; Select all viewport objects in the drawing (there should only be 1)
-    (if (setq ss (ssget "_X" '((0 . "VIEWPORT"))))
-        (progn
-            ; Move VIEWPORT to the front so its above the title block
-            (vl-cmdf "_.DRAWORDER" ss "" "F")
-
-            ; Get the first (and only) viewport
-            (setq ent (ssname ss 0))
-            (setq obj (vlax-ename->vla-object ent))
-
-            (vla-put-DisplayLocked obj :vlax-true)
-
-            ; Create a center point with X=8.5, Y=5.5
-            (vla-put-Center obj (vlax-3d-point 8.5 5.5 0))
-            (vla-put-Height obj 10.5)
-            (vla-put-Width obj 16.5)
-
-            (princ "Viewport properties updated: Center (8.5, 5.5), Height 10.5, Width 16.5, and moved to front.\n")
+    (FixViewport (GetActiveDoc))
+    (princ)
+)
+;; Make sure the VIEWPORT is ordered, centered, & sized correctly
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+(defun FixViewport (doc / viewport)
+    ;; Find first viewport in paperspace
+    (vlax-for obj (vla-get-PaperSpace doc)
+        (if (= "AcDbViewport" (vla-get-ObjectName obj))
+            (setq viewport obj)
         )
-        (princ "No viewport found in the drawing.\n")
     )
+    
+    ; Move VIEWPORT to the front so its above the title block
+    ; (vla-MoveToTop viewport) ; * doesnt exist in AutoCAD LT *
 
+    ;; Lock viewport
+    (vla-put-DisplayLocked viewport :vlax-true)
+
+    ;; Set viewport properties
+    (vla-put-Center viewport (vlax-3d-point 8.5 5.5 0))
+    (vla-put-Height viewport 10.5)
+    (vla-put-Width  viewport 16.5)
+
+    (princ "\nViewport properties updated: Center (8.5,5.5), Height 10.5, Width 16.5, moved to front.")
     (princ)
 )
 
@@ -86,46 +112,50 @@
 ;;; BLOCK REFERENCE FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Replaces and copies all attributes from one block reference to a new one
-; @param newEntFilePath [String] - File path to a .dwg file that contains a block reference
-(defun ReplaceBlockReference ( oldEnt newEntFilePath / newEnt )
-    (command "_.PSPACE")
-    
-    (InsertBlock newEntFilePath)
-    (setq newEnt (entlast))
-    (CopyBlockAttributes oldEnt newEnt)
-    (entdel oldEnt)
-
-    (command "_.MSPACE")
+;; Replaces and copies all attributes from one block reference to a new one, returning the new object
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+;; @param chooseSpace [SYM] MODEL or PAPER
+;; @param oldObj [#<VLA-OBJECT IAcadBlockReference]
+;; @param newObjFilePath [STR] File path to a .dwg file that contains a block reference
+;; @returns [#<VLA-OBJECT IAcadBlockReference] the new block reference
+(defun ReplaceBlockReference (doc chooseSpace oldObj newObjFilePath / newObj)
+    (setq newObj (InsertBlockReference doc chooseSpace newObjFilePath))
+    (CopyBlockAttributes oldObj newObj)
+    (vla-Delete oldObj)
     (princ "Replaced Block Reference\n")
+    newObj
 )
 
-; INSERTs a block reference onto the drawing
-(defun InsertBlock (filepath)
-    (setvar "ATTREQ" 0)
-    (command
-        "_.-INSERT"
+;; INSERTs a block reference onto the drawing
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+;; @param chooseSpace [SYM] MODEL or PAPER
+;; @param filepath [STR] can either be an actual filepath, or the name of a block reference in your AutoCAD block library
+;; @returns [#<VLA-OBJECT IAcadBlockReference] the inserted block reference
+(defun InsertBlockReference (doc chooseSpace filepath / space)
+    (setq chooseSpace
+        (cond
+            ((eq chooseSpace 'PAPER)(vla-get-PaperSpace doc))
+            ((eq chooseSpace 'MODEL)(vla-get-ModelSpace doc))
+        ))
+    (vla-InsertBlock
+        chooseSpace
+        (vlax-3d-point 0 0 0)
         filepath
-        '(0 0 0) ; insertion point
-        1 ; X scale
-        1 ; Y scale
-        0 ; rotation
+        1.0
+        1.0
+        1.0
+        0.0
     )
-    (setvar "ATTREQ" 1)
-    (princ)
 )
 
-; Copies attribute values from one block reference to another
-; @param oldEnt [ENAME] - The entity name of the source block reference
-; @param newEnt [ENAME] - The entity name of the target block reference
-(defun CopyBlockAttributes (oldEnt newEnt / oldObj newObj oldMap val)
-    (vl-load-com)
-
-    (setq oldObj (vlax-ename->vla-object oldEnt)
-            newObj (vlax-ename->vla-object newEnt))
+;; Copies attribute values from one block reference to another
+;; @param oldObj [#<VLA-OBJECT IAcadBlockReference] source block reference
+;; @param newobj [#<VLA-OBJECT IAcadBlockReference] target block reference
+(defun CopyBlockAttributes (oldObj newObj / oldMap val)
+    (princ "Copying block attributes\n")
+    
     ;; Build a TAG -> VALUE map for old block
     (setq oldMap nil)
-
     (foreach att (vlax-invoke oldObj 'GetAttributes)
         (setq oldMap
             (cons
@@ -135,7 +165,6 @@
             )
         )
     )
-    
     ;; Apply values of map to matching tags in new block
     (foreach att (vlax-invoke newObj 'GetAttributes)
         (if (setq val
@@ -151,6 +180,7 @@
     )
 
     (vla-Update newObj)
+    (princ "Done copying block attributes\n")
     (princ)
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -222,11 +252,11 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; UTILITY / DEBUGGING FUNCTIONS
+;;; DEBUGGING FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; prints out DXF codes for a selected object to the command line
-; Mainly useful for debugging and understanding how to manipulate object properties with DXF codes
+;; Prints out DXF codes for a selected object to the command line
+;; Mainly useful for debugging and understanding how to manipulate object properties with DXF codes
 (defun c:ShowDXF (/ e)
     (if (setq e (car (entsel "\nSelect object: ")))
         (foreach x (entget e)
@@ -237,11 +267,88 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; MULTI-FILE FUNCTIONS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Applies the given function "Work" to all .dwg files in the given folder. 
+;; @param folder [STR]
+;; @param Work [SYM]
+;; @param args [LIST]
+(defun ApplyToAll (folder Work args / docs doc dwgPath)
+	(princ "Start ApplyToAll function.\n")
+	(setq docs (vla-get-Documents (vlax-get-acad-object)))
+	
+	(foreach dwgPath (GetAllDwgs folder)
+		; Open drawing
+		(princ (strcat "Opening: " (vl-filename-base dwgPath) "\n"))
+		(setq doc (vla-open docs dwgPath))
+		
+		; Call Work regardless of arguments
+		(apply Work (cons doc args))
+		
+		; Save and close
+		(princ (strcat "Closing: " (vl-filename-base dwgPath) "\n"))
+		(vla-save doc)
+		(vla-close doc)
+	)
+	(princ "End ApplyToAll function.\n")
+)
+
+;; Returns a list of all .dwg file paths as strings in a given directory
+;; @param folder [STR] - a file directory
+;; @returns [LIST] a list of strings
+(defun GetAllDwgs (folder / result item fullpath)
+	; Initialize list of DWG file paths
+	(setq result '())
+
+	; Add all DWG files in the current folder
+	(foreach item (vl-directory-files folder "*.dwg" 1)
+		(setq result (cons (strcat folder item) result))
+	)
+
+	; Recursively process all subfolders
+	(foreach item (vl-directory-files folder nil -1)
+		; Ignore the current and parent directory entries
+		(if (and (/= item ".") (/= item ".."))
+			(setq fullpath (strcat folder item)
+				; Append DWGs found in this subfolder
+				result (append result (GetAllDwgs fullpath))
+			)
+		)
+	)
+	(princ (strcat "\nFound " (itoa (length result)) " DWGs in directory " folder "\n"))
+	result
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; MISC FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Returns a list of file names from the provided file
-; @param filename [string] - a file path
+;; Returns the number of objects in the active drawing
+(defun c:CountAllObjects (/)
+	(CountAllObjects (GetActiveDoc))
+	(princ)
+)
+;; Returns the number of objects in the given document
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+;; @returns [INT]
+(defun CountAllObjects (doc / count)
+	(setq count 0)
+	;; ModelSpace
+	(vlax-for obj (vla-get-ModelSpace doc)
+		(setq count (1+ count))
+	)
+	;; PaperSpace
+	(vlax-for obj (vla-get-PaperSpace doc)
+		(setq count (1+ count))
+	)
+	(princ (strcat "\nTotal objects found: " (itoa count)))
+	count
+)
+
+;; Returns a list of file names from the provided file
+;; @param filename [STR] a file path
+;; @returns [LIST] a list of strings
 (defun FileToList (filename / fp result line)
     ; Initialize list of file paths
     (setq result '())
@@ -263,14 +370,14 @@
     (reverse result)
 )
 
-; Pauses the script for a given time
-; @params secs [Integer] - the number of seconds to pause the script for
+;; Pauses the script for a given time
+;; @params secs [INT] the number of seconds to pause the script for
 (defun WaitSeconds (secs / endTime)
     (setq endTime (+ (getvar "DATE") (/ secs 86400.0)))
     (while (< (getvar "DATE") endTime))
 )
 
-;; deletes all WIPEOUT objects
+;; Deletes all WIPEOUT objects
 (defun c:DeleteWipeouts (/ ss)
     (if (setq ss (ssget "_X" '((0 . "WIPEOUT"))))
         (command "_.ERASE" ss "")
