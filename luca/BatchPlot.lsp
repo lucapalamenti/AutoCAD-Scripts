@@ -96,8 +96,8 @@
 
 ;; Returns a list of all "leaf node" folders in a directory as filepaths.
 ;; *Any folder that does not contain any subfolders is considered a "leaf node"
-;; @param directory [string] - a filepath
-;; @returns [list[string]] - all "leaf node" folders in a directory as filepaths
+;; @param directory [STR] a filepath
+;; @returns [LIST] all "leaf node" folders in a directory as filepaths
 (defun GetLeafFolders (directory / subFolders result)
   (setq subFolders
     (mapcar
@@ -118,8 +118,8 @@
 )
 
 ;; Returns a list of BMS PNL dwg file names in the correct order (C, M, E, IO, I)
-;; @param directory [string] - a directory's filepath
-;; @returns [list[string]] - a list of file names as strings
+;; @param directory [STR] a directory's filepath
+;; @returns [LIST] a list of file names as strings
 (defun GetBMSPNLFiles (directory / Cfiles Mfiles Efiles IOfiles Ifiles files)
   (setq Cfiles (vl-directory-files directory "*-C-*.dwg" 1))
   (setq Mfiles (vl-directory-files directory "*-M-*.dwg" 1))

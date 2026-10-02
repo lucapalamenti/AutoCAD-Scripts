@@ -44,7 +44,7 @@
 	(if insPt
 		(progn
 		; Get modelspace
-			(setq doc (vla-get-ActiveDocument (vlax-get-acad-object)))
+			(setq doc (GetActiveDoc))
 			(setq ms  (vla-get-ModelSpace doc))
 			; Insert RevTriangle Block Reference
 			(setq blkRef (vla-InsertBlock ms (vlax-3d-point insPt) *RevTriangleFilePath* *SelectedValue* *SelectedValue* *SelectedValue* 0.0))
@@ -105,10 +105,10 @@
 )
 
 ;; Checks if an object layer exists. If it doesn't then create it.
-;; @param layerName [string] - the name of the layer to check
+;; @param layerName [STR] the name of the layer to check
 ;; @returns [VLA-OBJECT] - the existing/created layer
 (defun EnsureLayer (layerName / doc lays lay)
-	(setq doc (vla-get-ActiveDocument (vlax-get-acad-object)))
+	(setq doc (GetActiveDoc))
 	(setq lays (vla-get-Layers doc))
 	(if (not(tblsearch "LAYER" layerName))
 		(vla-Add lays layerName)
@@ -118,9 +118,9 @@
 )
 
 ;; Sets a layer to use the "TrueColor" with the given RGB values
-;; @param r [Integer] - number from 0-255 inclusive
-;; @param g [Integer] - number from 0-255 inclusive
-;; @param b [Integer] - number from 0-255 inclusive
+;; @param r [INT] number from 0-255 inclusive
+;; @param g [INT] number from 0-255 inclusive
+;; @param b [INT] number from 0-255 inclusive
 (defun SetLayerToTrueRGB ( layerName r g b / acadObj doc layers layerObj trueColorObj)
 	(setq acadObj (vlax-get-acad-object)
 			doc     (vla-get-activedocument acadObj)
