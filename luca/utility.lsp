@@ -1,3 +1,6 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; IMPORTS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (vl-load-com)
 
@@ -383,4 +386,112 @@
         (command "_.ERASE" ss "")
     )
     (princ)
+)
+
+;; Organizes draw order based on object properties:
+;; - All XREFS to the back 
+;; - All MTEXT objects to the front
+;; - All geometry objects (circles, polylines, and lines) to the front
+(defun c:OrderObjects (/ ss)
+	; select all external reference objects in the drawing
+	(if (setq ss (ssget "_X" '((0 . "XREF"))))
+		(progn
+		; send all external references to the back of the draw order
+			(command "_.DRAWORDER" ss "" "B")
+			(princ "\nAll external references sent to back of draw order.")
+		)
+		(princ "\nNo external references found in the drawing.")
+	)
+	
+	; select geometry objects (polylines, and lines)
+	(if (setq ss (ssget "_X" '((0 . "LWPOLYLINE,POLYLINE,LINE"))))
+		(progn
+		; send all geometry objects to the front of the draw order
+			(command "_.DRAWORDER" ss "" "F")
+			(princ "\nAll geometry objects sent to front of draw order.")
+		)
+		(princ "\nNo geometry objects found in the drawing.")
+	)
+	
+	; select all MTEXT objects in the drawing
+	(if (setq ss (ssget "_X" '((0 . "MTEXT"))))
+		(progn
+		; send all MTEXT objects to the front of the draw order
+			(command "_.DRAWORDER" ss "" "F")
+			(princ "\nMTEXT objects sent to front of draw order.")
+		)
+		(princ "\nNo MTEXT objects found in the drawing.")
+	)
+	
+	; select all Circle objects
+	(if (setq ss (ssget "_X" '((0 . "CIRCLE"))))
+		(progn
+		; send all Circle objects to the front of the draw order
+			(command "_.DRAWORDER" ss "" "F")
+			(princ "\nAll geometry objects sent to front of draw order.")
+		)
+		(princ "\nNo geometry objects found in the drawing.")
+	)
+
+	(princ)
+)
+
+;; Moves all objects in Paper Space to Model Space, except the Block Reference template
+(defun c:MoveObjectsToModel (/ ss ent vpSS)
+	(command "_.PSPACE")
+	; Select all objects in Paper Space
+	; DXF 67 = workspace (0 = MODEL, 1 = PAPER)
+	(if (setq ss (ssget "_X" '((67 . 1))))
+		; Change space from Paper to Model
+		(progn
+		; remove the title block from the selection set
+			(if (setq ent (GetTitleBlock))
+				(ssdel ent ss)
+			)
+			; remove all viewports from the selection set
+			(if (setq vpSS (ssget "_X" '((67 . 1) (0 . "VIEWPORT"))))
+				(repeat (sslength vpSS)
+					(ssdel (ssname vpSS 0) ss)
+				)
+			)
+
+			(command "_.CHSPACE" ss "" "")
+			(princ "\nObjects moved from Paper Space to Model Space.")
+		)
+		(princ "\nNo objects found in Paper Space (or only Block References).")
+	)
+	(command "_.MSPACE")
+	(princ)
+)
+
+;; Applies text styling to all MTEXT objects
+(defun c:StyleMText (/ ss i ent obj)
+	; select all MTEXT objects 
+	(if (setq ss (ssget "_X" '((0 . "MTEXT"))))
+		(progn
+			(setq i 0)
+			; repeat "length of ss (selection set)" times
+			(repeat (sslength ss)
+				(setq ent (ssname ss i))
+				(setq obj (vlax-ename->vla-object ent))
+				
+				; Change any "STANDARD" font styles to "ROMANS"
+				(if (wcmatch (strcase (vla-get-StyleName obj)) "STANDARD")
+					(vla-put-StyleName obj "ROMANS")
+				)
+
+				; Set font size based on font style
+				; If font style is Romans, set to 24; otherwise set to 48
+				(if (wcmatch (strcase (vla-get-StyleName obj)) "ROMANS")
+					(vla-put-Height obj 24)
+					(vla-put-Height obj 48)
+				)
+				(setq i (1+ i))
+			)
+			(princ (strcat "\nFormatted " (itoa (sslength ss)) " MTEXT objects."))
+		)
+		(princ "\nNo MTEXT objects found.")
+	)
+
+	(princ)
 )

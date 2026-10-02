@@ -10,17 +10,17 @@
 ;;; FOLDERS
 
 (setq *MAIN_DIR*
-  	"C:\\Users\\luca.palamenti\\OneDrive - RoviSys\\Documents\\AutoCAD\\luca\\")
+  	"C:\\Users\\luca.palamenti\\OneDrive - RoviSys\\Documents\\AutoCAD\\")
 (setq *TX_NUM*
   	"TX309\\")
 (setq *BMS_CP_DWGS*
-  	(strcat *MAIN_DIR* *TX_NUM* "BMS Control Panel Drawings DWGs\\"))
+  	(strcat *MAIN_DIR* *TX_NUM* "BMS Control Panel Drawings DWGs\\Chiller Plant 4\\CP4-PUMP\\TX309-CP4-PUMP-BMS-PNL-01\\"))
 (setq *TEST_DIR*
   	(strcat *MAIN_DIR* *TX_NUM* "testdir\\"))
 (setq *BMS_CP_PDFS*
   	(strcat *MAIN_DIR* *TX_NUM* "BMS Control Panel Drawings PDFs\\"))
 (setq *SCRIPT_DIR*
-  	(strcat *MAIN_DIR* "AutoCAD-Scripts\\"))
+  	(strcat *MAIN_DIR* "AutoCAD-Scripts\\luca\\"))
 
 ;;; INDIVIDUAL FILES
 
@@ -68,14 +68,3 @@
 	(LoadAllScripts *SCRIPT_DIR*)
 	(princ)
 )
-
-; (LoadAllScripts *SCRIPT_DIR*)
-
-; (setq *DocOpenedReactorVar* (vlr-docmanager-reactor nil '((:vlr-documentBecameCurrent . DocOpenedReactor))))
-; (defun DocOpenedReactor (reactor params /)
-; 	(princ "Params:")
-; 	(princ params)
-
-; 	(LoadAllScripts *SCRIPT_DIR*)
-; 	(princ)
-; )

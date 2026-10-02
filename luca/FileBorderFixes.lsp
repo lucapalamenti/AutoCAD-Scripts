@@ -22,7 +22,7 @@
 	(c:SetupPageLayout)
 	; Make sure the paper space is formatted correctly
 	(c:FixViewport)
-	(FormatTitleBlock_Helper "ShopBMS")
+	(FormatTitleBlock_Prompt "ShopBMS")
 	; Move all objects to the Model workspace
 	(c:MoveObjectsToModel)
 	; Convert all TEXT objects to MTEXT objects
@@ -50,7 +50,7 @@
 (defun BMSPanelBorderFix (doc /)
 	(SetupPageLayout doc)
 	(FixViewport doc)
-	(FormatTitleBlock_Helper doc "PanelBMS")
+	(FormatTitleBlock_Prompt doc "PanelBMS")
 	(c:MoveObjectsToModel)
 	(princ)
 )

@@ -9,8 +9,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (vl-load-com)
-(load "AutoCAD-Scripts/utility.lsp")
-(load "AutoCAD-Scripts/ApplyToAll.lsp")
+(load "AutoCAD-Scripts/luca/utility.lsp")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; FILE SPECIFIC GLOBAL VARIABLES
@@ -41,7 +40,7 @@
 		(cons (strcat "POS_" *POS* "_APV_BY")         "SA")
 	)
 )
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -49,10 +48,18 @@
 ;; Moves title block to PAPER space and formats it
 ;; Options: ShopBMS, PanelBMS
 (defun c:FormatTitleBlock (/)
-	(FormatTitleBlock_Helper nil)
+	(FormatTitleBlock_Prompt (GetActiveDoc) nil)
 	(princ)
 )
-(defun FormatTitleBlock_Helper (choice /)
+;; Prompt user for title block type
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+;; @param choice [STR] ShopBMS or PanelBMS
+(defun FormatTitleBlock_Prompt (doc choice /)
+	; Make sure doc is defined
+    (if (null doc)
+        (setq doc (GetActiveDoc))
+    )
+	; Make sure choice is defined
 	(if (null choice)
 		(progn
 			;; Title Block options
@@ -65,41 +72,41 @@
 	;; Handle selection
 	(cond
 		((= choice "ShopBMS")
-			(FormatTitleBlock 1.0 1.0)
+			(FormatTitleBlock doc choice 1.0 1.0)
 		)
 		((= choice "PanelBMS")
-			(FormatTitleBlock 0.5 0.5)
+			(FormatTitleBlock doc choice 0.5 0.5)
 		)
 	)
 )
-(defun FormatTitleBlock (ScaleX ScaleY / ent ss obj insPt)
+;; Formats the title block on a drawing
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+;; @param choice [STR] ShopBMS or PanelBMS
+;; @param ScaleX [REAL]
+;; @param ScaleY [REAL]
+(defun FormatTitleBlock (doc choice ScaleX ScaleY / insPt tb)
 	(princ "Start: FormatTitleBlock\n")
-	(command "_.MSPACE")
 	; Move Title block to PAPER space and center it
-	(setq ent (GetTitleBlock))
-	(setq ss (ssadd ent (ssadd)))
-	(princ "WHAT2\n")
-	(if (> (sslength ss) 0)
+	(setq tb (GetTitleBlock doc))
+	(if tb
 		(progn
-			(if (= 1 (cdr (assoc 67 (entget ent))))
+			; Make sure the title block is in PAPER space
+			(if (= 1 (cdr (assoc 67 (entget (vlax-vla-object->ename tb)))))
 				(princ "\nAlready in Paper Space.")
-				(command "_.CHSPACE" ss "" "P")
+				(setq tb (ReplaceTitleBlock doc choice))
 			)
-			
-			(setq obj (vlax-ename->vla-object ent))
-			
 			; Set the block reference properties
 
-			(setq insPt (vlax-get obj 'InsertionPoint))
+			(setq insPt (vlax-get tb 'InsertionPoint))
 			(vla-Move
-				obj
+				tb
 				(vlax-3d-point insPt)
 				(vlax-3d-point '(0 0 0))
 			)
 
-			(vla-put-XScaleFactor obj ScaleX)
-			(vla-put-YScaleFactor obj ScaleY)
-			(vla-put-ZScaleFactor obj 1.0)
+			(vla-put-XScaleFactor tb ScaleX)
+			(vla-put-YScaleFactor tb ScaleY)
+			(vla-put-ZScaleFactor tb 1.0)
 			
 			(princ "\n Title block insertion point updated to (0,0).")
 		)
@@ -110,65 +117,89 @@
 )
 
 ;; Replaces and copies all attributes from the current title block to a correctly formatted one
+;; in paperspace
 ;; Options: ShopBMS
 (defun c:ReplaceTitleBlock (/)
-	(ReplaceTitleBlock_Helper nil)
+	(ReplaceTitleBlock (GetActiveDoc) nil)
 	(princ)
 )
-(defun ReplaceTitleBlock (choice /)
+;; Replaces the title block on a drawing
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+;; @param choice [STR] ShopBMS or PanelBMS
+(defun ReplaceTitleBlock (doc choice / tb)
+	(if (null doc)
+		(setq doc (GetActiveDoc))
+	)
 	(if (null choice)
 		(progn
 			;; Title Block options
-			(initget "ShopBMS")
+			(initget "ShopBMS PanelBMS")
 			;; Prompt user
-			(setq choice (getkword "\nSelect action [ShopBMS]: "))
+			(setq choice (getkword "\nSelect action [ShopBMS/PanelBMS]: "))
 		)
 	)
+
+	(princ "\nReplacing Title Block.")
+
+	(setq tb (GetTitleBlock doc))
 	
 	;; Handle selection
 	(cond
 		((= choice "ShopBMS")
-			(ReplaceBlockReference (GetTitleBlock) *ShopDWGTitleBlockPath*)
+			(setq tb (ReplaceBlockReference doc 'PAPER tb *BMS_SHOP_DWG_TITLEBLOCK_FILEPATH*))
+		)
+		((= choice "PanelBMS")
+			(setq tb (ReplaceBlockReference doc 'PAPER tb (vla-get-EffectiveName tb)))
 		)
 	)
 
-	(princ (strcat "Replaced " choice " Title Block\n"))
-	(princ)
+	(princ (strcat "\nReplaced " choice " Title Block."))
+	tb
 )
 
-;; Returns the ENAME of the Title Block entity
-(defun GetTitleBlock (/ ss i ent obj blkName result)
-	(princ "Finding title block.\n")
-	(setq ss (ssget "_X" '((0 . "INSERT"))))
-	(if (> (sslength ss) 0)
-		(progn
-			(setq i 0)
-			(while (< i (sslength ss))
-				(setq ent (ssname ss i)
-					obj (vlax-ename->vla-object ent)
-					blkName (strcase (vla-get-EffectiveName obj)))
-				; If the Block Reference's name is the title block's name
-				(if (member blkName *valid-title-block-names*)
-					(progn
-						(setq result ent)
-						(setq i (sslength ss)) ; exit loop
-						(princ "Title block found.\n")
-					)
-					(setq i (1+ i))
-				)
+;; Returns the Title Block of the active document as a VLA-OBJECT
+;; @returns [#<VLA-OBJECT IAcadBlockReference]
+(defun c:GetTitleBlock (/)
+    (GetTitleBlock (GetActiveDoc))
+    (princ)
+)
+;; Returns the Title Block of a given document as a VLA-OBJECT
+;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
+(defun GetTitleBlock (doc / obj result)
+    (princ "Finding title block.\n")
+
+    (if (null doc)
+        (setq doc (GetActiveDoc))
+    )
+
+	; Search paperspace for title block
+    (vlax-for obj (vla-get-PaperSpace doc)
+        (if (= "AcDbBlockReference" (vla-get-ObjectName obj))
+			(if (member (strcase (vla-get-EffectiveName obj)) *valid-title-block-names*)
+				(setq result obj)
 			)
-		)
-		(princ "No title block found.\n")
-	)
-	result
+        )
+    )
+	; Search modelspace for title block
+    (vlax-for obj (vla-get-ModelSpace doc)
+        (if (= "AcDbBlockReference" (vla-get-ObjectName obj))
+			(if (member (strcase (vla-get-EffectiveName obj)) *valid-title-block-names*)
+				(setq result obj)
+			)
+        )
+    )
+
+    (if (null result)
+        (princ "No title block found.\n")
+    )
+    result
 )
 
-;; Wrapper function for commandline call
+
 (defun c:UpdateTitleBlockAttributes (/)
 	(UpdateTitleBlockAttributes)
 	(princ)
 )
-
 (defun UpdateTitleBlockAttributes ( / blk obj atts tag val )
 	;; Get title block ENAME
 	(setq blk (GetTitleBlock))
@@ -194,14 +225,12 @@
 								(vla-get-TextAlignmentPoint att)
 							)
 						)
-
 						(vla-Update att)
 					)
 				)
 			)
 
 			(vla-Update obj)
-			(vl-cmdf "_.REGEN")
 		)
 	)
 
