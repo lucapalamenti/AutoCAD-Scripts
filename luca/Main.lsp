@@ -27,9 +27,12 @@
 (setq *MONOCHROME_FILEPATH*
   	(strcat *MAIN_DIR* "Grayscale_CP__Campus 11x17 model 2.dwg"))
 (setq *BMS_SHOP_DWG_TITLEBLOCK_FILEPATH*
-  	(strcat *MAIN_DIR* *TX_NUM* "B Size RBT Final.dwg"))
+  	(strcat *MAIN_DIR* "B Size RBT Final.dwg"))
+(setq *BMS_PNL_DWG_TITLEBLOCK_FILEPATH*
+  	"NEW_VDC_BLOCK-1")
 (setq *TEST_LIST*
   	(strcat *MAIN_DIR* *TX_NUM* "testlist.txt"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; MAIN FUNCTION
@@ -47,7 +50,7 @@
 			((member item '("." "..")))
 
 			;; Skip this file "Main.lsp"
-			((wcmatch (strcase item) "MAIN.LSP"))
+			; ((wcmatch (strcase item) "MAIN.LSP"))
 
 			;; Load .lsp file
 			((wcmatch (strcase item) "*.LSP")

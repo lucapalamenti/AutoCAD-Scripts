@@ -19,7 +19,7 @@
 (defun GetLayoutTab (doc index / lay layout)
     (vlax-for lay (vla-get-Layouts doc)
         (if (= (vla-get-TabOrder lay) index)
-            (setq layout (vla-item (vla-get-Layouts doc) "Layout1"))
+            (setq layout lay)
         )
     )
     layout
@@ -82,13 +82,13 @@
 )
 
 ;; Make sure the VIEWPORT is ordered, centered, & sized correctly
-(defun c:FixViewport (/ ss ent obj)
+(defun c:FixViewport (/)
     (FixViewport (GetActiveDoc))
     (princ)
 )
 ;; Make sure the VIEWPORT is ordered, centered, & sized correctly
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
-(defun FixViewport (doc / viewport)
+(defun FixViewport (doc / viewport obj)
     ;; Find first viewport in paperspace
     (vlax-for obj (vla-get-PaperSpace doc)
         (if (= "AcDbViewport" (vla-get-ObjectName obj))
@@ -134,27 +134,32 @@
 ;; @param chooseSpace [SYM] MODEL or PAPER
 ;; @param filepath [STR] can either be an actual filepath, or the name of a block reference in your AutoCAD block library
 ;; @returns [#<VLA-OBJECT IAcadBlockReference] the inserted block reference
-(defun InsertBlockReference (doc chooseSpace filepath / space)
-    (setq chooseSpace
+(defun InsertBlockReference (doc chooseSpace filepath / choice blk)
+    (princ "\nInserting Block Reference.")
+    (setq choice
         (cond
             ((eq chooseSpace 'PAPER)(vla-get-PaperSpace doc))
             ((eq chooseSpace 'MODEL)(vla-get-ModelSpace doc))
         ))
-    (vla-InsertBlock
-        chooseSpace
-        (vlax-3d-point 0 0 0)
-        filepath
-        1.0
-        1.0
-        1.0
-        0.0
+    (setq blk
+        (vla-InsertBlock
+            choice
+            (vlax-3d-point 0 0 0)
+            filepath
+            1.0
+            1.0
+            1.0
+            0.0
+        )
     )
+    (princ "\nBlock reference inserted.")
+    blk
 )
 
 ;; Copies attribute values from one block reference to another
 ;; @param oldObj [#<VLA-OBJECT IAcadBlockReference] source block reference
 ;; @param newobj [#<VLA-OBJECT IAcadBlockReference] target block reference
-(defun CopyBlockAttributes (oldObj newObj / oldMap val)
+(defun CopyBlockAttributes (oldObj newObj / oldMap att val)
     (princ "Copying block attributes\n")
     
     ;; Build a TAG -> VALUE map for old block
@@ -162,8 +167,7 @@
     (foreach att (vlax-invoke oldObj 'GetAttributes)
         (setq oldMap
             (cons
-                (cons (strcase (vla-get-TagString att))
-                    (vla-get-TextString att))
+                (cons (strcase (vla-get-TagString att)) (vla-get-TextString att))
                 oldMap
             )
         )
@@ -171,12 +175,7 @@
     ;; Apply values of map to matching tags in new block
     (foreach att (vlax-invoke newObj 'GetAttributes)
         (if (setq val
-                (cdr
-                    (assoc
-                        (strcase (vla-get-TagString att))
-                        oldMap
-                    )
-                )
+                (cdr (assoc (strcase (vla-get-TagString att)) oldMap ))
             )
             (vla-put-TextString att val)
         )
@@ -254,20 +253,6 @@
     (princ)
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; DEBUGGING FUNCTIONS
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Prints out DXF codes for a selected object to the command line
-;; Mainly useful for debugging and understanding how to manipulate object properties with DXF codes
-(defun c:ShowDXF (/ e)
-    (if (setq e (car (entsel "\nSelect object: ")))
-        (foreach x (entget e)
-            (print x)
-        )
-    )
-    (princ)
-)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; MULTI-FILE FUNCTIONS
@@ -335,7 +320,7 @@
 ;; Returns the number of objects in the given document
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 ;; @returns [INT]
-(defun CountAllObjects (doc / count)
+(defun CountAllObjects (doc / count obj)
 	(setq count 0)
 	;; ModelSpace
 	(vlax-for obj (vla-get-ModelSpace doc)
@@ -494,4 +479,26 @@
 	)
 
 	(princ)
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; DEBUGGING FUNCTIONS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Prints out DXF codes for a selected object to the command line
+;; Mainly useful for debugging and understanding how to manipulate object properties with DXF codes
+(defun c:ShowDXF (/ e)
+    (if (setq e (car (entsel "\nSelect object: ")))
+        (foreach x (entget e)
+            (print x)
+        )
+    )
+    (princ)
+)
+
+(defun c:GetName (/ ent)
+    (if (setq ent (car (entsel "\nSelect an entity: ")))
+        (princ (vla-get-ObjectName (vlax-ename->vla-object ent)))
+    )
+    (princ)
 )

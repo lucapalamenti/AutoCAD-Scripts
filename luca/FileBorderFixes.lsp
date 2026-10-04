@@ -51,6 +51,5 @@
 	(SetupPageLayout doc)
 	(FixViewport doc)
 	(FormatTitleBlock_Prompt doc "PanelBMS")
-	(c:MoveObjectsToModel)
 	(princ)
 )
