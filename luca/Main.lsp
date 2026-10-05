@@ -29,10 +29,13 @@
 (setq *BMS_SHOP_DWG_TITLEBLOCK_FILEPATH*
   	(strcat *MAIN_DIR* "B Size RBT Final.dwg"))
 (setq *BMS_PNL_DWG_TITLEBLOCK_FILEPATH*
-  	"NEW_VDC_BLOCK-1")
+  	(strcat *MAIN_DIR* "BMS_PNL_TB.dwg"))
 (setq *TEST_LIST*
   	(strcat *MAIN_DIR* *TX_NUM* "testlist.txt"))
 
+;;; OTHER
+
+(setq *DEBUG_MODE* T)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; MAIN FUNCTION
@@ -43,14 +46,22 @@
 ;; when updates are made
 ;; @param folder [STR] filepath for a directory
 (defun LoadAllScripts (folder / item fullPath)
+	; Preload certain files
+	(load "AutoCAD-Scripts/luca/Utility.lsp")
 	(foreach item (vl-directory-files folder nil 0)
 		(setq fullPath (strcat folder item))
 		(cond
 			;; Skip "." and ".."
 			((member item '("." "..")))
 
-			;; Skip this file "Main.lsp"
+			;; Skip file "Main.lsp" (this file)
 			; ((wcmatch (strcase item) "MAIN.LSP"))
+
+			;; Skip file "Old.lsp"
+			((wcmatch (strcase item) "OLD.LSP"))
+
+			;; Skip file "Utility.lsp" (preloaded)
+			((wcmatch (strcase item) "Utility.LSP"))
 
 			;; Load .lsp file
 			((wcmatch (strcase item) "*.LSP")
@@ -63,7 +74,7 @@
 			)
 		)
 	)
-	(princ "Done loading scripts.\n")
+	(print "Done loading scripts.")
 	(princ)
 )
 

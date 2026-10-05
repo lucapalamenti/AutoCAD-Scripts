@@ -5,11 +5,14 @@
 (vl-load-com)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; OBJECT GET FUNCTIONS
+;;; OBJECT GETTERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Returns the active document
 ;; @returns [#<VLA-OBJECT IAcadDocument>]
+#|
+    @param dsadsadsaa
+|#
 (defun GetActiveDoc (/) (vla-get-ActiveDocument (vlax-get-acad-object)))
 
 ;; Returns the layout tab at the given index for a given document. "Model" is always index 0.
@@ -26,7 +29,7 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; PAGE SETUP FUNCTIONS
+;;; PAGE SETUP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Configures the size and positioning of a page
@@ -37,6 +40,7 @@
 ;; Configures the size and positioning of a page
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 (defun SetupPageLayout (doc / lay)
+    (PrintIf "Start SetupPageLayout -- ")
     ; Make sure doc is defined
     (if (null doc)
         (setq doc (GetActiveDoc))
@@ -77,7 +81,7 @@
             (vlax-make-safearray vlax-vbDouble '(0 . 1)) '(0.0 0.0)
         )
     ))
-
+    (PrincIf "End SetupPageLayout")
     (princ)
 )
 
@@ -89,6 +93,7 @@
 ;; Make sure the VIEWPORT is ordered, centered, & sized correctly
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 (defun FixViewport (doc / viewport obj)
+    (PrintIf "Start FixViewport -- ")
     ;; Find first viewport in paperspace
     (vlax-for obj (vla-get-PaperSpace doc)
         (if (= "AcDbViewport" (vla-get-ObjectName obj))
@@ -107,12 +112,12 @@
     (vla-put-Height viewport 10.5)
     (vla-put-Width  viewport 16.5)
 
-    (princ "\nViewport properties updated: Center (8.5,5.5), Height 10.5, Width 16.5, moved to front.")
+    (PrincIf "Viewport properties updated: Center (8.5,5.5), Height 10.5, Width 16.5, moved to front.")
     (princ)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; BLOCK REFERENCE FUNCTIONS
+;;; BLOCK REFERENCE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Replaces and copies all attributes from one block reference to a new one, returning the new object
@@ -125,7 +130,7 @@
     (setq newObj (InsertBlockReference doc chooseSpace newObjFilePath))
     (CopyBlockAttributes oldObj newObj)
     (vla-Delete oldObj)
-    (princ "Replaced Block Reference\n")
+    (PrincIf "Replaced Block Reference.")
     newObj
 )
 
@@ -135,7 +140,7 @@
 ;; @param filepath [STR] can either be an actual filepath, or the name of a block reference in your AutoCAD block library
 ;; @returns [#<VLA-OBJECT IAcadBlockReference] the inserted block reference
 (defun InsertBlockReference (doc chooseSpace filepath / choice blk)
-    (princ "\nInserting Block Reference.")
+    (PrintIf "Start InsertBlockReference -- ")
     (setq choice
         (cond
             ((eq chooseSpace 'PAPER)(vla-get-PaperSpace doc))
@@ -152,7 +157,7 @@
             0.0
         )
     )
-    (princ "\nBlock reference inserted.")
+    (PrincIf "Block reference inserted.")
     blk
 )
 
@@ -160,7 +165,7 @@
 ;; @param oldObj [#<VLA-OBJECT IAcadBlockReference] source block reference
 ;; @param newobj [#<VLA-OBJECT IAcadBlockReference] target block reference
 (defun CopyBlockAttributes (oldObj newObj / oldMap att val)
-    (princ "Copying block attributes\n")
+    (PrincIf "Start CopyBlockAttributes -- ")
     
     ;; Build a TAG -> VALUE map for old block
     (setq oldMap nil)
@@ -182,11 +187,11 @@
     )
 
     (vla-Update newObj)
-    (princ "Done copying block attributes\n")
+    (PrincIf "Done copying block attributes.")
     (princ)
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; TEXT FUNCTIONS
+;;; TEXT OBJECT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Converts all TEXT objects to MTEXT
@@ -196,9 +201,9 @@
     (if ss
         (progn
             (command "_.TXT2MTXT" ss "")
-            (princ "\nAll TEXT objects converted to MTEXT.")
+            (PrincIf "All TEXT objects converted to MTEXT.")
         )
-        (princ "\nNo TEXT objects found in the drawing.")
+        (PrincIf "No TEXT objects found in the drawing.")
     )
     (princ)
 )
@@ -227,7 +232,7 @@
             (entmod dxf_ent)
             (entupd (ssname ss i))
         )
-        (princ "\nNo MText objects found.")
+        (PrincIf "No MText objects found.")
     )
     (princ)
 )
@@ -248,14 +253,14 @@
                 (setq i (1+ i))
             )
         )
-        (princ "\nNo MLEADER objects found.")
+        (PrincIf "No MLEADER objects found.")
     )
     (princ)
 )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; MULTI-FILE FUNCTIONS
+;;; MULTI-FILE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Applies the given function "Work" to all .dwg files in the given folder. 
@@ -263,29 +268,30 @@
 ;; @param Work [SYM]
 ;; @param args [LIST]
 (defun ApplyToAll (folder Work args / docs doc dwgPath)
-	(princ "Start ApplyToAll function.\n")
+	(PrintIf "Start ApplyToAll -- ")
 	(setq docs (vla-get-Documents (vlax-get-acad-object)))
 	
 	(foreach dwgPath (GetAllDwgs folder)
 		; Open drawing
-		(princ (strcat "Opening: " (vl-filename-base dwgPath) "\n"))
+		(PrincIf (strcat "Opening: " (vl-filename-base dwgPath) "\n"))
 		(setq doc (vla-open docs dwgPath))
 		
 		; Call Work regardless of arguments
 		(apply Work (cons doc args))
 		
 		; Save and close
-		(princ (strcat "Closing: " (vl-filename-base dwgPath) "\n"))
+		(PrincIf (strcat "Closing: " (vl-filename-base dwgPath) "\n"))
 		(vla-save doc)
 		(vla-close doc)
 	)
-	(princ "End ApplyToAll function.\n")
+	(PrincIf "End ApplyToAll function.")
 )
 
 ;; Returns a list of all .dwg file paths as strings in a given directory
 ;; @param folder [STR] - a file directory
 ;; @returns [LIST] a list of strings
 (defun GetAllDwgs (folder / result item fullpath)
+    (PrintIf "Start GetAllDwgs -- ")
 	; Initialize list of DWG file paths
 	(setq result '())
 
@@ -304,12 +310,12 @@
 			)
 		)
 	)
-	(princ (strcat "\nFound " (itoa (length result)) " DWGs in directory " folder "\n"))
+	(PrincIf (strcat "\nFound " (itoa (length result)) " DWGs in directory " folder "\n"))
 	result
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; MISC FUNCTIONS
+;;; MISC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Returns the number of objects in the active drawing
@@ -330,7 +336,7 @@
 	(vlax-for obj (vla-get-PaperSpace doc)
 		(setq count (1+ count))
 	)
-	(princ (strcat "\nTotal objects found: " (itoa count)))
+	(PrincIf (strcat "\nTotal objects found: " (itoa count)))
 	count
 )
 
@@ -354,7 +360,7 @@
             (close fp)
         )
     )
-    (princ (strcat "\nFound " (itoa (length result)) " names in " filename ":\n"))
+    (PrincIf (strcat "\nFound " (itoa (length result)) " names in " filename ":\n"))
     (reverse result)
 )
 
@@ -378,44 +384,28 @@
 ;; - All MTEXT objects to the front
 ;; - All geometry objects (circles, polylines, and lines) to the front
 (defun c:OrderObjects (/ ss)
-	; select all external reference objects in the drawing
+	; send all external references to the back of the draw order
 	(if (setq ss (ssget "_X" '((0 . "XREF"))))
-		(progn
-		; send all external references to the back of the draw order
-			(command "_.DRAWORDER" ss "" "B")
-			(princ "\nAll external references sent to back of draw order.")
-		)
-		(princ "\nNo external references found in the drawing.")
+        (command "_.DRAWORDER" ss "" "B")
+		(PrincIf "\nNo external references found in the drawing.")
 	)
 	
-	; select geometry objects (polylines, and lines)
+	; send all geometry objects to the front of the draw order
 	(if (setq ss (ssget "_X" '((0 . "LWPOLYLINE,POLYLINE,LINE"))))
-		(progn
-		; send all geometry objects to the front of the draw order
-			(command "_.DRAWORDER" ss "" "F")
-			(princ "\nAll geometry objects sent to front of draw order.")
-		)
-		(princ "\nNo geometry objects found in the drawing.")
+		(command "_.DRAWORDER" ss "" "F")
+		(PrincIf "\nNo geometry objects found in the drawing.")
 	)
 	
-	; select all MTEXT objects in the drawing
+	; send all MTEXT objects to the front of the draw order
 	(if (setq ss (ssget "_X" '((0 . "MTEXT"))))
-		(progn
-		; send all MTEXT objects to the front of the draw order
-			(command "_.DRAWORDER" ss "" "F")
-			(princ "\nMTEXT objects sent to front of draw order.")
-		)
-		(princ "\nNo MTEXT objects found in the drawing.")
+		(command "_.DRAWORDER" ss "" "F")
+		(PrincIf "\nNo MTEXT objects found in the drawing.")
 	)
 	
-	; select all Circle objects
+	; send all Circle objects to the front of the draw order
 	(if (setq ss (ssget "_X" '((0 . "CIRCLE"))))
-		(progn
-		; send all Circle objects to the front of the draw order
-			(command "_.DRAWORDER" ss "" "F")
-			(princ "\nAll geometry objects sent to front of draw order.")
-		)
-		(princ "\nNo geometry objects found in the drawing.")
+		(command "_.DRAWORDER" ss "" "F")
+		(PrincIf "\nNo geometry objects found in the drawing.")
 	)
 
 	(princ)
@@ -441,9 +431,8 @@
 			)
 
 			(command "_.CHSPACE" ss "" "")
-			(princ "\nObjects moved from Paper Space to Model Space.")
 		)
-		(princ "\nNo objects found in Paper Space (or only Block References).")
+		(PrincIf "\nNo objects found in Paper Space (or only Block References).")
 	)
 	(command "_.MSPACE")
 	(princ)
@@ -473,16 +462,30 @@
 				)
 				(setq i (1+ i))
 			)
-			(princ (strcat "\nFormatted " (itoa (sslength ss)) " MTEXT objects."))
 		)
-		(princ "\nNo MTEXT objects found.")
+		(PrincIf "\nNo MTEXT objects found.")
 	)
 
 	(princ)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; DEBUGGING FUNCTIONS
+;;; UTILITY
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Separates a string using a given delimiter
+;; str - [str] String to process
+;; del - [str] Delimiter by which to separate the string
+;; Returns: [lst] List of strings
+(defun Str->List (str del / pos)
+    (if (setq pos (vl-string-search del str))
+        (cons (substr str 1 pos) (Str->List (substr str (+ pos 1 (strlen del))) del))
+        (list str)
+    )
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; DEBUGGING
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Prints out DXF codes for a selected object to the command line
@@ -501,4 +504,17 @@
         (princ (vla-get-ObjectName (vlax-ename->vla-object ent)))
     )
     (princ)
+)
+
+;; Wrapper for the princ function. Only runs princ if *DEBUG_MODE* is set to T
+;; @param str [STR] string to princ
+(defun PrincIf (str /)
+	(if *DEBUG_MODE* (princ str))
+	(princ)
+)
+;; Wrapper for the print function. Only runs print if *DEBUG_MODE* is set to T
+;; @param str [STR] string to print
+(defun PrintIf (str /)
+	(if *DEBUG_MODE* (print str))
+	(princ)
 )

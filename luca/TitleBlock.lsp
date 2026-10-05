@@ -21,6 +21,7 @@
 		"B SIZE RBT FINAL"
 		"B SIZE RBT CORRECTED"
 		"NEW_VDC_BLOCK-1"
+		"BMS_PNL_TB"
 	))
 
 ; Used for updating the POS Block Reference attributes
@@ -54,7 +55,7 @@
 ;; Returns the Title Block of a given document as a VLA-OBJECT
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 (defun GetTitleBlock (doc / obj result)
-    (princ "Finding title block.\n")
+    (PrintIf "Finding title block -- ")
 
     (if (null doc)
         (setq doc (GetActiveDoc))
@@ -78,8 +79,8 @@
     )
 
     (if (null result)
-        (princ "\nNo title block found.")
-		(princ "\nTitle block found.")
+        (princ "No title block found.")
+		(PrincIf "Title block found.")
     )
     result
 )
@@ -124,7 +125,7 @@
 ;; @param ScaleX [REAL]
 ;; @param ScaleY [REAL]
 (defun FormatTitleBlock (doc choice ScaleX ScaleY / insPt tb)
-	(princ "\nStart: FormatTitleBlock")
+	(PrintIf "Start FormatTitleBlock -- ")
 	; Move Title block to PAPER space and center it
 	(setq tb (GetTitleBlock doc))
 	(if tb
@@ -142,12 +143,12 @@
 			(vla-put-XScaleFactor tb ScaleX)
 			(vla-put-YScaleFactor tb ScaleY)
 			(vla-put-ZScaleFactor tb 1.0)
-			
-			(princ "\n Title block insertion point updated to (0,0).")
+
+			(TitleBlockAttCorrections doc tb choice)
 		)
-		(princ "\nNo title block found in the drawing.")
+		(princ "No title block found in the drawing.")
 	)
-	(princ "\nEnd: FormatTitleBlock")
+	(PrincIf "End FormatTitleBlock")
 	(princ)
 )
 
@@ -162,8 +163,9 @@
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 ;; @param choice [STR] ShopBMS or PanelBMS
 (defun ReplaceTitleBlock (doc choice / tb)
-	(if (null doc)
-		(setq doc (GetActiveDoc))
+	(PrintIf "Start ReplaceTitleBlock -- ")
+	(cond
+		((null doc) (PrincIf "doc param not provided!"))
 	)
 	(if (null choice)
 		(progn
@@ -174,7 +176,7 @@
 		)
 	)
 
-	(princ "\nReplacing Title Block.")
+	(PrincIf "Replacing Title Block.")
 
 	(setq tb (GetTitleBlock doc))
 	
@@ -187,58 +189,75 @@
 			(setq tb (ReplaceBlockReference doc 'PAPER tb *BMS_PNL_DWG_TITLEBLOCK_FILEPATH*))
 		)
 	)
-	(princ (strcat "\nReplaced " choice " Title Block."))
+	(PrincIf (strcat "\nReplaced " choice " Title Block."))
 	tb
 )
 
-(defun c:UpdateTitleBlockAttributes (/)
-	(UpdateTitleBlockAttributes)
-	(princ)
-)
-
+;; Makes sure the "AB_DWGNUMB" title block attribute is the same as the file name
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
-(defun UpdateTitleBlockAttributes (doc / tb obj atts tag val )
-	;; Get title block ENAME
-	(setq tb (GetTitleBlock))
-
-	(if tb
-		(progn
-			(setq obj (vlax-ename->vla-object tb))
-
-			;; Iterate all attribute references
-			(foreach att (vlax-invoke obj 'GetAttributes)
-
-				(setq tag (strcase (vla-get-TagString att)))
-
-				;; Lookup value in *attributeMap*
-				(if (setq val (cdr (assoc tag *attributeMap*)))
-					(progn
-						(vla-put-TextString att val)
-
-						;; Force alignment recalculation for FIT attributes
-						(if (vlax-property-available-p att 'TextAlignmentPoint)
-							(vla-put-TextAlignmentPoint
-								att
-								(vla-get-TextAlignmentPoint att)
+;; @param tb [#<VLA-OBJECT IAcadBlockReference] the title block object
+(defun TitleBlockAttCorrections (doc tb choice / filename att)
+	(PrintIf "Start MatchTitleBlockDWGNo -- ")
+	(cond
+		; Ensure all parameters are given
+		((null doc) (PrincIf "doc param not provided!"))
+		((null tb) (PrincIf "tb param not provided!"))
+		((null choice) (PrincIf "choice param not provided!"))
+		(T
+			(setq filename (vl-filename-base (vla-get-Name doc)))
+			(foreach att (vlax-invoke tb 'GetAttributes)
+				(cond
+					((= (strcase (vla-get-TagString att)) "AB_CADFILE")
+						(vla-put-TextString att (cond
+							((= choice "ShopBMS")
+								"FilenameToCADPart_BMSShop FUNCTION NOT CREATED YET"
 							)
-						)
-						(vla-Update att)
+							((= choice "PanelBMS")
+								(FilenameToCADPart_BMSPNL filename)
+							)
+						))
+					)
+					((= (strcase (vla-get-TagString att)) "AB_DWGNUMB")
+						(vla-put-TextString att filename)
 					)
 				)
+				
 			)
-			(vla-Update obj)
 		)
-		(princ "\nTitle block not found.")
 	)
-
+	(PrincIf "End MatchTitleBlockDWGNo.")
 	(princ)
 )
+;; Converts a drawing filename to the AB_CADFILE attribute (CAD Part) for a title block
+;; Examples:
+;; DM11-BMS-PNL-02-C-01      -> BMS-PNL-DM-C-01
+;; CP4-PUMP-BMS-PNL-01-M-06  -> BMS-PNL-PUMP-M-06
+;; CP4-SUP-BMS-PNL-02-E-11   -> BMS-PNL-SUP-E-11
+;; @param filename - [str]
+(defun FilenameToCADPart_BMSPNL (filename / parts a c d f g)
+	(setq parts (Str->List filename "-"))
 
-(defun c:UpdateTitleBlockAttributesAll (/)
-	(c:ApplyToAll
-		*BMS_CP_DWGS*
-		'UpdateTitleBlockAttributes
-		nil
+	(cond
+		; Format: AB-C-D-E-F-G ; Example: DM11-BMS-PNL-02-C-01
+		((= (length parts) 6)
+			(setq a (vl-string-right-trim "0123456789" (nth 0 parts)))
+			(setq c (nth 1 parts))
+			(setq d (nth 2 parts))
+			(setq f (nth 4 parts))
+			(setq g (nth 5 parts))
+		)
+
+		; Format: B-A-C-D-E-F-G ; Example: CP4-PUMP-BMS-PNL-01-M-06
+		((= (length parts) 7)
+			(setq a (nth 1 parts))
+			(setq c (nth 2 parts))
+			(setq d (nth 3 parts))
+			(setq f (nth 5 parts))
+			(setq g (nth 6 parts))
+		)
 	)
-	(princ)
+
+	(if (and a c d f g)
+		(strcat c "-" d "-" a "-" f "-" g)
+	)
 )

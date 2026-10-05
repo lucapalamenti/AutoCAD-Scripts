@@ -21,6 +21,7 @@
 
 ;;
 (defun CreateDSDs (directory makeDsdCopyDir / dsdFilepaths subFolders folder dsdFilepath files file dsdfp count dsdCopyDir dsdCopyDirFilepath)
+	(PrintIf "Start CreateDSDs -- ")
 	; List of .dsd filepaths to be returned
 	(setq dsdFilepaths '())
 	(setq subFolders (GetLeafFolders directory))
@@ -89,7 +90,7 @@
 			)
 		)
 	)
-	(princ (strcat "DSD created for " (itoa (length subFolders)) " subfolders.\n"))
+	(PrincIf (strcat "DSD created for " (itoa (length subFolders)) " subfolders.\n"))
 	; Return list in original order
 	(reverse dsdFilepaths)
 )
