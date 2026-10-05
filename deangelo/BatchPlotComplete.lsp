@@ -8,7 +8,8 @@
 ;;; FILE SPECIFIC GLOBAL VARIABLES
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(setq *BMS_CP_DWGS*
+  	(strcat "C:\\Users\\luca.palamenti\\OneDrive - RoviSys\\Documents\\AutoCAD\\TX309\\BMS Control Panel Drawings DWGs"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; FUNCTIONS
@@ -21,7 +22,7 @@
 
 ;;
 (defun CreateDSDs (directory makeDsdCopyDir monochromeFilepath / dsdFilepaths subFolders folder dsdFilepath files file dsdfp count dsdCopyDir dsdCopyDirFilepath)
-	(PrintIf "Start CreateDSDs -- ")
+	(print "Start CreateDSDs -- ")
 	(if (null monochromeFilepath)
 		(setq monochromeFilepath (getfiled "Select Grayscale DWG" "" "dwg" 0))
 	)
@@ -55,8 +56,8 @@
 
 		(write-line "[Target]" dsdfp)
 		(write-line "Type=6" dsdfp)
-		(write-line (strcat "DWF=" *BMS_CP_PDFS* (vl-filename-base folder) ".pdf") dsdfp)
-		(write-line (strcat "OUT=" *BMS_CP_PDFS*) dsdfp)
+		; (write-line (strcat "DWF=" *BMS_CP_PDFS* (vl-filename-base folder) ".pdf") dsdfp)
+		; (write-line (strcat "OUT=" *BMS_CP_PDFS*) dsdfp)
 		(write-line "PWD=" dsdfp)
 
 		(write-line "[PdfOptions]" dsdfp)
@@ -94,7 +95,7 @@
 			)
 		)
 	)
-	(PrincIf (strcat "DSD created for " (itoa (length subFolders)) " subfolders.\n"))
+	(princ (strcat "DSD created for " (itoa (length subFolders)) " subfolders.\n"))
 	; Return list in original order
 	(reverse dsdFilepaths)
 )
