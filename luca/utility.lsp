@@ -297,14 +297,14 @@
 
 	; Add all DWG files in the current folder
 	(foreach item (vl-directory-files folder "*.dwg" 1)
-		(setq result (cons (strcat folder item) result))
+		(setq result (cons (strcat folder "\\" item) result))
 	)
 
 	; Recursively process all subfolders
 	(foreach item (vl-directory-files folder nil -1)
 		; Ignore the current and parent directory entries
 		(if (and (/= item ".") (/= item ".."))
-			(setq fullpath (strcat folder item)
+			(setq fullpath (strcat folder "\\" item)
 				; Append DWGs found in this subfolder
 				result (append result (GetAllDwgs fullpath))
 			)
