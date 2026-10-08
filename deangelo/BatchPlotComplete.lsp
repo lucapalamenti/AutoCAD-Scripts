@@ -9,7 +9,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq *BMS_CP_DWGS*
-  	(strcat "C:\\Users\\luca.palamenti\\OneDrive - RoviSys\\Documents\\AutoCAD\\TX309\\BMS Control Panel Drawings DWGs"))
+  	(strcat "C:\\Users\\deangelo.lino\\OneDrive - RoviSys\\Documents\\Projects\\TX309\\IFR\\Control Panel Drawings\\Chiller Plant 4\\ER15\\TX309-ER15-BMS-PNL-01"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; FUNCTIONS
