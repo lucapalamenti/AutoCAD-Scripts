@@ -267,7 +267,7 @@
 	(princ)
 )
 
-(defun FixViewport ( / ss1 viewport ss2 edata vp-id ptCenter curWidth curHeight targetWidth targetHeight deltaX deltaY ptBL ptTR ptBoxLL ptBoxUR)
+(defun FixViewport ( / ss1 viewport ss2 edata vp-id ptCenter curWidth curHeight targetWidth targetHeight deltaX deltaY ptBL ptTR ptBoxLL ptBoxUR oldWidth scaleFactor)
 	(setq targetWidth 16.5)
 	(setq targetHeight 10.5)
 	(setq ss1 (ssget "X" (list '(0 . "VIEWPORT") (cons 410 (getvar "CTAB")))))
@@ -303,6 +303,7 @@
 					(setq ptCenter (cdr (assoc 10 edata)))
 					(setq curWidth  (cdr (assoc 40 edata)))
 					(setq curHeight (cdr (assoc 41 edata)))
+                    (setq oldWidth curWidth)
 
 					;; Calculate distance needed to add/subtract to hit target sizes
 					(setq deltaX (- targetWidth curWidth))
@@ -317,14 +318,26 @@
 					(setq ptBoxLL (list (car ptCenter) (- (cadr ptCenter) curHeight) 0.0))
 					(setq ptBoxUR (list (+ (car ptTR) 5.0) (+ (cadr ptTR) 5.0) 0.0))
 					
-					(command "_.stretch" "_C" ptBoxLL ptBoxUR "" '(0.0 0.0 0.0) (list deltaX 0.0 0.0))
+					; (command "_.stretch" "_C" ptBoxLL ptBoxUR "" '(0.0 0.0 0.0) (list deltaX 0.0 0.0))
 
 					;; --- C. Stretch Height (Top Edge) ---
 					;; Create a crossing window around the top two grips
 					(setq ptBoxLL (list (- (car ptBL) 5.0) (cadr ptCenter) 0.0))
 					(setq ptBoxUR (list (+ (car ptTR) (+ deltaX 5.0)) (+ (cadr ptTR) 5.0) 0.0))
 					
-					(command "_.stretch" "_C" ptBoxLL ptBoxUR "" '(0.0 0.0 0.0) (list 0.0 deltaY 0.0))
+					; (command "_.stretch" "_C" ptBoxLL ptBoxUR "" '(0.0 0.0 0.0) (list 0.0 deltaY 0.0))
+
+                    ;; --- Re-read viewport after resize
+                    (setq edata (entget viewport))
+                    (setq curWidth (cdr (assoc 40 edata)))
+
+                    ;; Calculate zoom factor so model scales with viewport size
+                    (setq scaleFactor (/ curWidth oldWidth))
+
+                    ; ;; Activate viewport and zoom model
+                    ; (command "_.MSPACE")
+                    ; (command "_.ZOOM" (strcat (rtos scaleFactor 2 8) "X"))
+                    ; (command "_.PSPACE")
 
 					;; --- D. Move Center to (8.5, 5.5) ---
 					;; Re-read the entity because stretching changed its center location
