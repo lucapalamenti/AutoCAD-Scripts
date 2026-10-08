@@ -3,7 +3,7 @@ Useful Acronyms/Abbreviations TX3 Rev0
 ADM:  Admin
 AHU:  Air Handling Unit
 BMS:  Building Management System
-BOH:  Back of House?
+BOH:  Back of House? (Fire Riser Room)
 BOM:  Bill of Materials
 CCS:  Cable and Conduit Schedule
 CDU:  Coolant Distribution Unit
