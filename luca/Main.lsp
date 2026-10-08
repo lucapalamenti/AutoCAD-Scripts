@@ -14,7 +14,7 @@
 (setq *TX_NUM*
   	"TX309\\")
 (setq *BMS_CP_DWGS*
-  	(strcat *MAIN_DIR* *TX_NUM* "BMS Control Panel Drawings DWGs\\Chiller Plant 4\\CP4-PUMP\\TX309-CP4-PUMP-BMS-PNL-01\\"))
+  	(strcat *MAIN_DIR* *TX_NUM* "BMS Control Panel Drawings DWGs"))
 (setq *TEST_DIR*
   	(strcat *MAIN_DIR* *TX_NUM* "testdir\\"))
 (setq *BMS_CP_PDFS*
@@ -27,7 +27,7 @@
 (setq *MONOCHROME_FILEPATH*
   	(strcat *MAIN_DIR* "Grayscale_CP__Campus 11x17 model 2.dwg"))
 (setq *BMS_SHOP_DWG_TITLEBLOCK_FILEPATH*
-  	(strcat *MAIN_DIR* "B Size RBT Final.dwg"))
+  	(strcat *MAIN_DIR* "B Size RBT Corrected.dwg"))
 (setq *BMS_PNL_DWG_TITLEBLOCK_FILEPATH*
   	(strcat *MAIN_DIR* "BMS_PNL_TB.dwg"))
 (setq *TEST_LIST*
@@ -35,7 +35,7 @@
 
 ;;; OTHER
 
-(setq *DEBUG_MODE* T)
+(setq *DEBUG_MODE* nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; MAIN FUNCTION
@@ -47,7 +47,7 @@
 ;; @param folder [STR] filepath for a directory
 (defun LoadAllScripts (folder / item fullPath)
 	; Preload certain files
-	(load "AutoCAD-Scripts/luca/Utility.lsp")
+	(load "AutoCAD-Scripts/luca/Utility_Standard.lsp")
 	(foreach item (vl-directory-files folder nil 0)
 		(setq fullPath (strcat folder item))
 		(cond
@@ -61,7 +61,7 @@
 			((wcmatch (strcase item) "OLD.LSP"))
 
 			;; Skip file "Utility.lsp" (preloaded)
-			((wcmatch (strcase item) "Utility.LSP"))
+			((wcmatch (strcase item) "UTILITY_STANDARD.LSP"))
 
 			;; Load .lsp file
 			((wcmatch (strcase item) "*.LSP")

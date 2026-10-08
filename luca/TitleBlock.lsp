@@ -9,7 +9,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (vl-load-com)
-(load "AutoCAD-Scripts/luca/utility.lsp")
+(load "AutoCAD-Scripts/luca/Utility_Standard.lsp")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; FILE SPECIFIC GLOBAL VARIABLES
@@ -17,6 +17,7 @@
 
 (setq *valid-title-block-names*
 	'(
+		"BMS SHOP TITLEBLOCK"
 		"B SIZE RBT"
 		"B SIZE RBT FINAL"
 		"B SIZE RBT CORRECTED"
@@ -26,21 +27,7 @@
 
 ; Used for updating the POS Block Reference attributes
 ; (POS 1 refers to the bottom row of the revisions table in the title block. POS 2 refers to the second to bottom row. etc.)
-(setq *POS* "3")
-; Update to contain new attribute values
-(setq *attributeMap*
-	(list
-		(cons                      "DRAWING_REVISION" "0.1")
-		(cons                      "DATE"             "09-25-2026")
-		(cons (strcat "POS_" *POS* "_REV")            "0.1")
-		(cons (strcat "POS_" *POS* "_DATE")           "09-25")
-		(cons (strcat "POS_" *POS* "_YEAR")           "2026")
-		(cons (strcat "POS_" *POS* "_CHANGES_LINE_1") "IFC REV 0 COMMENTS")
-		(cons (strcat "POS_" *POS* "_CHANGES_LINE_2") "")
-		(cons (strcat "POS_" *POS* "_REV_BY")         "LP")
-		(cons (strcat "POS_" *POS* "_APV_BY")         "SA")
-	)
-)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; FUNCTIONS
