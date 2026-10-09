@@ -24,7 +24,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun c:BMSPanelStartScript (/ tbfilepath)
-    (setq tbfilepath "C:\\Users\\luca.palamenti\\OneDrive - RoviSys\\Documents\\AutoCAD\\BMS_PNL_TB.dwg")
+    (setq tbfilepath nil)
     (if (null tbfilepath)
         (setq tbfilepath (getfiled "Select filepath for BMS Panel Title Block: " "" "dwg" 0))
     )

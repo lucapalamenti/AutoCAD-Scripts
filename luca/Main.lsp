@@ -47,21 +47,20 @@
 ;; @param folder [STR] filepath for a directory
 (defun LoadAllScripts (folder / item fullPath)
 	; Preload certain files
-	(load "AutoCAD-Scripts/luca/Utility_Standard.lsp")
+	(load "AutoCAD-Scripts/luca/Utility_Active.lsp")
+	(load "AutoCAD-Scripts/luca/Utility_Inactive.lsp")
 	(foreach item (vl-directory-files folder nil 0)
 		(setq fullPath (strcat folder item))
 		(cond
 			;; Skip "." and ".."
 			((member item '("." "..")))
 
-			;; Skip file "Main.lsp" (this file)
-			; ((wcmatch (strcase item) "MAIN.LSP"))
-
 			;; Skip file "Old.lsp"
 			((wcmatch (strcase item) "OLD.LSP"))
 
-			;; Skip file "Utility.lsp" (preloaded)
-			((wcmatch (strcase item) "UTILITY_STANDARD.LSP"))
+			;; Skip preloaded files
+			((wcmatch (strcase item) "UTILITY_ACTIVE.LSP"))
+			((wcmatch (strcase item) "UTILITY_INACTIVE.LSP"))
 
 			;; Load .lsp file
 			((wcmatch (strcase item) "*.LSP")
