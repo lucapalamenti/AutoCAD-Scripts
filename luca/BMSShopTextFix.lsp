@@ -77,7 +77,6 @@
 ;; Converts all TEXT objects to MTEXT
 (defun Text2MText (/ ss)
     (setq ss (ssget "_X" '((0 . "TEXT"))))
-    (sssetfirst nil ss)
     (if ss
         (command "_.TXT2MTXT" ss "")
     )
@@ -100,7 +99,7 @@
             (entmod dxf_ent)
             (entupd (ssname ss i))
         )
-        (PrincIf "No MText objects found.")
+        (print "No MText objects found.")
     )
     (princ)
 )
@@ -121,7 +120,7 @@
                 (setq i (1+ i))
             )
         )
-        (PrincIf "No MLEADER objects found.")
+        (print "No MLEADER objects found.")
     )
     (princ)
 )

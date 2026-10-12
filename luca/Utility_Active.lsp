@@ -112,7 +112,7 @@
 
 ;; Runs all text masking functions
 (defun c:MaskText (/)
-	(Text2MText)
+    (Text2MText)
     (MaskAllMText)
     (MaskAllMLeaders)
     (DeleteWipeouts)
