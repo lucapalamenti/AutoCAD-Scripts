@@ -101,24 +101,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Converts all TEXT objects to MTEXT
-(defun c:Text2MText (/ ss)
+(defun Text2MText (/ ss)
     (setq ss (ssget "_X" '((0 . "TEXT"))))
     (sssetfirst nil ss)
     (if ss
-        (progn
-            (command "_.TXT2MTXT" ss "")
-            (PrincIf "All TEXT objects converted to MTEXT.")
-        )
-        (PrincIf "No TEXT objects found in the drawing.")
+        (command "_.TXT2MTXT" ss "")
     )
     (princ)
 )
 
 ;; Runs all text masking functions
 (defun c:MaskText (/)
+	(Text2MText)
     (MaskAllMText)
     (MaskAllMLeaders)
-    (c:DeleteWipeouts)
+    (DeleteWipeouts)
     (princ)
 )
 ;; Applies a background color mask to all MTEXT objects
@@ -165,7 +162,7 @@
 )
 
 ;; Deletes all WIPEOUT objects
-(defun c:DeleteWipeouts (/ ss)
+(defun DeleteWipeouts (/ ss)
     (if (setq ss (ssget "_X" '((0 . "WIPEOUT"))))
         (command "_.ERASE" ss "")
     )
