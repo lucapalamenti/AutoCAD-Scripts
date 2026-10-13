@@ -101,6 +101,90 @@
 	(princ)
 )
 
+
+;; Replaces item at index n in lst
+(defun ReplaceNth (n val lst)
+    (if (zerop n)
+        (cons val (cdr lst))
+        (cons (car lst)
+              (ReplaceNth (1- n) val (cdr lst)))
+    )
+)
+
+;; Prompts the user to select LEADER objects and moves
+;; the vertex at vIndex by dx,dy
+;;
+;; @param vIndex [INT] vertex index (0-based)
+;; @param dx     [REAL] horizontal offset
+;; @param dy     [REAL] vertical offset
+(defun MoveLeaderVertex (vIndex dx dy / ss i obj coords idx vertexCount)
+	(if (null vIndex) (setq vIndex (getint "Select Vertex Index:")))
+	(if (null dx) (setq dx (getint "Set horizontal offset:")))
+	(if (null dy) (setq dy (getint "Set vertical offset:")))
+    (if (setq ss (ssget '((0 . "LEADER"))))
+        (repeat (setq i (sslength ss))
+            (setq obj (vlax-ename->vla-object (ssname ss (setq i (1- i)))) )
+            (setq coords
+                (vlax-safearray->list
+                    (vlax-variant-value
+                        (vla-get-Coordinates obj)
+                    )
+                )
+            )
+
+            (setq vertexCount (/ (length coords) 3))
+
+            (if (< vIndex vertexCount)
+
+                (progn
+
+                    (setq idx (* vIndex 3))
+
+                    ;; Move X
+                    (setq coords
+                        (ReplaceNth
+                            idx
+                            (+ (nth idx coords) dx)
+                            coords
+                        )
+                    )
+
+                    ;; Move Y
+                    (setq coords
+                        (ReplaceNth
+                            (+ idx 1)
+                            (+ (nth (+ idx 1) coords) dy)
+                            coords
+                        )
+                    )
+
+                    ;; Update leader
+                    (vla-put-Coordinates
+                        obj
+                        (vlax-make-variant
+                            (vlax-safearray-fill
+                                (vlax-make-safearray
+                                    vlax-vbDouble
+                                    (cons 0 (1- (length coords)))
+                                )
+                                coords
+                            )
+                        )
+                    )
+
+                    (vla-Update obj)
+                )
+            )
+        )
+    )
+
+    (princ)
+)
+(defun c:MoveLeaderVertex (/)
+	(MoveLeaderVertex nil nil nil)
+	(princ)
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; TEXT OBJECT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
