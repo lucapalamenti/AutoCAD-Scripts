@@ -53,6 +53,11 @@
 		(command "_.DRAWORDER" ss "" "F")
 		(PrincIf "\nNo geometry objects found in the drawing.")
 	)
+
+    ; send all LEADER and MLEADER objects to the front of the draw order
+	(if (setq ss (ssget "_X" '((0 . "LEADER,MLEADER"))))
+		(command "_.DRAWORDER" ss "" "F")
+	)
 	
 	; send all MTEXT objects to the front of the draw order
 	(if (setq ss (ssget "_X" '((0 . "MTEXT"))))

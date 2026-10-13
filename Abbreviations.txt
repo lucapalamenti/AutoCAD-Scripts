@@ -23,11 +23,13 @@ EF:   Exhaust Fan
 EOR:  Engineer Of Record
 EPMS: Electrical Power Monitoring System
 ER:   Electrical Room
+ET:   Expansion Tank
 FACP: Fire Alarm Control Panels
 FM:   Flow Meter
 FPB:  Fan Powered Box
 FWU:  Fan Wall Unit
 GEN:  Generator
+GFS:  Glycol Feed System
 GWY:  Gateway
 HAC:  Hot Aisle Containment
 HAPP: Hot Aisle Containment Auxiliary Power Panel
@@ -51,6 +53,7 @@ REC:  Recloser
 RIO:  Remote Input/Output
 RPP:  Remote Power Panel
 RTU:  Remote Terminal Unit
+SSF:  Side Stream Filter
 SUP:  Supervisor
 TCMU: Temperature Control Monitoring Unit
 TCS:  Technical Cooling System
@@ -60,3 +63,4 @@ UPS:  Uninterruptible Power Supply
 VAV:  Variable Air Volume
 VFD:  Variable Frequency Drive
 XFMR: Transformer
+WQA:  Water QualityAnalyzer

@@ -61,16 +61,50 @@
 	result
 )
 
+;; Organizes draw order based on object properties:
+;; - All XREFS to the back 
+;; - All MTEXT objects to the front
+;; - All geometry objects (circles, polylines, and lines) to the front
+(defun OrderObjects (/ ss)
+	; send all external references to the back of the draw order
+	(if (setq ss (ssget "_X" '((0 . "XREF"))))
+        (command "_.DRAWORDER" ss "" "B")
+	)
+	
+	; send all geometry objects to the front of the draw order
+	(if (setq ss (ssget "_X" '((0 . "LWPOLYLINE,POLYLINE,LINE"))))
+		(command "_.DRAWORDER" ss "" "F")
+	)
+
+    ; send all LEADER and MLEADER objects to the front of the draw order
+	(if (setq ss (ssget "_X" '((0 . "LEADER,MLEADER"))))
+		(command "_.DRAWORDER" ss "" "F")
+	)
+	
+	; send all MTEXT objects to the front of the draw order
+	(if (setq ss (ssget "_X" '((0 . "MTEXT"))))
+		(command "_.DRAWORDER" ss "" "F")
+	)
+	
+	; send all Circle objects to the front of the draw order
+	(if (setq ss (ssget "_X" '((0 . "CIRCLE"))))
+		(command "_.DRAWORDER" ss "" "F")
+	)
+
+	(princ)
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; TEXT OBJECT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Runs all text masking functions
-(defun c:MaskText (/)
+(defun c:BMSShopFix (/)
 	(Text2MText)
-    (MaskAllMText)
+    (MaskAllMText 1.1)
     (MaskAllMLeaders)
     (DeleteWipeouts)
+    (OrderObjects)
     (princ)
 )
 
@@ -83,7 +117,7 @@
     (princ)
 )
 ;; Applies a background color mask to all MTEXT objects
-(defun MaskAllMText (/ ss i dxf_ent)
+(defun MaskAllMText (padding / ss i dxf_ent)
     (if (setq ss (ssget "_X" '((0 . "MTEXT"))))
         (repeat (setq i (sslength ss))
             (setq dxf_ent (entget (ssname ss (setq i (1- i)))))
@@ -95,7 +129,7 @@
             ; 45 = Text padding
             ; 40 = Width
             ; 41 = Height
-            (setq dxf_ent (append dxf_ent '((90 . 3) (63 . 256) (45 . 1.5) (41 . 0))))
+            (setq dxf_ent (append dxf_ent (list '(90 . 3) '(63 . 256) (cons 45 padding) '(41 . 0))))
             (entmod dxf_ent)
             (entupd (ssname ss i))
         )
