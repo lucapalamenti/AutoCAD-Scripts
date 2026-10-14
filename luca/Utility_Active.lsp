@@ -45,13 +45,13 @@
 	; send all external references to the back of the draw order
 	(if (setq ss (ssget "_X" '((0 . "XREF"))))
         (command "_.DRAWORDER" ss "" "B")
-		(PrincIf "\nNo external references found in the drawing.")
+		(princ "\nNo external references found in the drawing.")
 	)
 	
 	; send all geometry objects to the front of the draw order
 	(if (setq ss (ssget "_X" '((0 . "LWPOLYLINE,POLYLINE,LINE"))))
 		(command "_.DRAWORDER" ss "" "F")
-		(PrincIf "\nNo geometry objects found in the drawing.")
+		(princ "\nNo geometry objects found in the drawing.")
 	)
 
     ; send all LEADER and MLEADER objects to the front of the draw order
@@ -62,13 +62,13 @@
 	; send all MTEXT objects to the front of the draw order
 	(if (setq ss (ssget "_X" '((0 . "MTEXT"))))
 		(command "_.DRAWORDER" ss "" "F")
-		(PrincIf "\nNo MTEXT objects found in the drawing.")
+		(princ "\nNo MTEXT objects found in the drawing.")
 	)
 	
 	; send all Circle objects to the front of the draw order
 	(if (setq ss (ssget "_X" '((0 . "CIRCLE"))))
 		(command "_.DRAWORDER" ss "" "F")
-		(PrincIf "\nNo geometry objects found in the drawing.")
+		(princ "\nNo geometry objects found in the drawing.")
 	)
 
 	(princ)
@@ -95,7 +95,7 @@
 
 			(command "_.CHSPACE" ss "" "")
 		)
-		(PrincIf "\nNo objects found in Paper Space (or only Block References).")
+		(princ "\nNo objects found in Paper Space (or only Block References).")
 	)
 	(command "_.MSPACE")
 	(princ)
@@ -124,22 +124,11 @@
     (if (setq ss (ssget '((0 . "LEADER"))))
         (repeat (setq i (sslength ss))
             (setq obj (vlax-ename->vla-object (ssname ss (setq i (1- i)))) )
-            (setq coords
-                (vlax-safearray->list
-                    (vlax-variant-value
-                        (vla-get-Coordinates obj)
-                    )
-                )
-            )
-
+            (setq coords (vlax-safearray->list (vlax-variant-value (vla-get-Coordinates obj))))
             (setq vertexCount (/ (length coords) 3))
-
             (if (< vIndex vertexCount)
-
                 (progn
-
                     (setq idx (* vIndex 3))
-
                     ;; Move X
                     (setq coords
                         (ReplaceNth
@@ -148,7 +137,6 @@
                             coords
                         )
                     )
-
                     ;; Move Y
                     (setq coords
                         (ReplaceNth
@@ -157,21 +145,16 @@
                             coords
                         )
                     )
-
                     ;; Update leader
                     (vla-put-Coordinates
                         obj
                         (vlax-make-variant
                             (vlax-safearray-fill
-                                (vlax-make-safearray
-                                    vlax-vbDouble
-                                    (cons 0 (1- (length coords)))
-                                )
+                                (vlax-make-safearray vlax-vbDouble (cons 0 (1- (length coords))))
                                 coords
                             )
                         )
                     )
-
                     (vla-Update obj)
                 )
             )
@@ -183,6 +166,54 @@
 (defun c:MoveLeaderVertex (/)
 	(MoveLeaderVertex nil nil nil)
 	(princ)
+)
+
+(defun c:LeaderToMLeader (/ lead txt lobj tobj txtstr p1 p2)
+    ; Prompt user to select LEADER
+    (while (setq lead (car (entsel "\nSelect Leader <Enter to exit>: ")))
+        (if (= "LEADER" (cdr (assoc 0 (entget lead))))
+            (progn
+                ; Prompt user to select MTEXT
+                (setq txt (car (entsel "\nSelect MTEXT: ")))
+                (if (= "MTEXT" (cdr (assoc 0 (entget txt))))
+                    (progn
+                        ; MTEXT contents
+                        (setq txtstr (cdr (assoc 1 (entget txt))))
+                        ;; LEADER arrow point
+                        (setq p1 (cdr (assoc 10 (entget lead))))
+                        ;; MTEXT insertion point
+                        (setq p2 (GetLeaderVertex lead))
+
+                        ;; create MLEADER
+                        (command "_.MLEADER" p1 p2 txtstr)
+
+                        ;; delete original objects
+                        (entdel lead)
+                        (entdel txt)
+
+                        (princ "\nConverted.")
+                    )
+                    (princ "\nMTEXT not selected.")
+                )
+            )
+            (princ "\nLeader not selected.")
+        )
+    )
+
+    (princ)
+)
+
+(defun GetLeaderVertex (leader / coords)
+    (setq coords
+        (vlax-safearray->list
+            (vlax-variant-value
+                (vla-get-Coordinates
+                    (vlax-ename->vla-object lead)
+                )
+            )
+        )
+    )
+    (list (nth 3 coords) (nth 4 coords) (nth 5 coords))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -224,7 +255,7 @@
             (entmod dxf_ent)
             (entupd (ssname ss i))
         )
-        (PrincIf "No MText objects found.")
+        (princ "No MText objects found.")
     )
     (princ)
 )
@@ -245,7 +276,7 @@
                 (setq i (1+ i))
             )
         )
-        (PrincIf "No MLEADER objects found.")
+        (princ "No MLEADER objects found.")
     )
     (princ)
 )

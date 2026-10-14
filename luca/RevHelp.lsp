@@ -139,7 +139,7 @@
 		
 		; Write the updated color structure back to the layer definition
 		(vla-put-truecolor layerObj trueColorObj)
-		(PrintIf (strcat "\nLayer " layerName " updated to True Red (VLA)."))
+		(print (strcat "\nLayer " layerName " updated to True Red (VLA)."))
 	)
 	(princ)
 )

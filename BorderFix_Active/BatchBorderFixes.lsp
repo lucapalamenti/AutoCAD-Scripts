@@ -85,7 +85,7 @@
 ;; @param Work [SYM]
 ;; @param args [LIST]
 (defun ApplyToAll (folder Work args / docs doc dwgPath)
-	(PrintIf "Start ApplyToAll -- ")
+	(print "Start ApplyToAll -- ")
     ; Prompt user until a non empty string is provided
     (while (or (null folder) (= folder ""))
         (setq folder (getstring T "\nEnter drawings folder path: "))
@@ -94,18 +94,18 @@
 	
 	(foreach dwgPath (GetAllDwgs folder)
 		; Open drawing
-		(PrincIf (strcat "Opening: " (vl-filename-base dwgPath) "\n"))
+		(princ (strcat "Opening: " (vl-filename-base dwgPath) "\n"))
 		(setq doc (vla-open docs dwgPath))
 		
 		; Call Work regardless of arguments
 		(apply Work (cons doc args))
 		
 		; Save and close
-		(PrincIf (strcat "Closing: " (vl-filename-base dwgPath) "\n"))
+		(princ (strcat "Closing: " (vl-filename-base dwgPath) "\n"))
 		(vla-save doc)
 		(vla-close doc)
 	)
-	(PrincIf "End ApplyToAll function.")
+	(princ "End ApplyToAll function.")
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -132,7 +132,7 @@
 ;; Configures the size and positioning of a page
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 (defun SetupPageLayout (doc / lay)
-    (PrintIf "Start SetupPageLayout -- ")
+    (print "Start SetupPageLayout -- ")
 
     (setq lay (GetLayoutTab doc 1))
 
@@ -169,14 +169,14 @@
             (vlax-make-safearray vlax-vbDouble '(0 . 1)) '(0.0 0.0)
         )
     ))
-    (PrincIf "End SetupPageLayout")
+    (princ "End SetupPageLayout")
     (princ)
 )
 
 ;; Make sure the VIEWPORT is ordered, centered, & sized correctly
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 (defun FixViewport (doc / viewport obj)
-    (PrintIf "Start FixViewport -- ")
+    (print "Start FixViewport -- ")
     ;; Find first viewport in paperspace
     (vlax-for obj (vla-get-PaperSpace doc)
         (if (= "AcDbViewport" (vla-get-ObjectName obj))
@@ -195,14 +195,14 @@
     (vla-put-Height viewport 10.5)
     (vla-put-Width  viewport 16.5)
 
-    (PrincIf "Viewport properties updated: Center (8.5,5.5), Height 10.5, Width 16.5, moved to front.")
+    (princ "Viewport properties updated: Center (8.5,5.5), Height 10.5, Width 16.5, moved to front.")
     (princ)
 )
 
 ;; Returns the Title Block of a given document as a VLA-OBJECT
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 (defun GetTitleBlock (doc / obj result)
-    (PrintIf "Finding title block -- ")
+    (print "Finding title block -- ")
 
 	; Search paperspace for title block
     (vlax-for obj (vla-get-PaperSpace doc)
@@ -223,7 +223,7 @@
 
     (if (null result)
         (princ "No title block found.")
-		(PrincIf "Title block found.")
+		(princ "Title block found.")
     )
     result
 )
@@ -251,7 +251,7 @@
     (vla-put-ZScaleFactor newObj 1.0)
     (CopyBlockAttributes oldObj newObj)
     (vla-Delete oldObj)
-    (PrincIf "Replaced Block Reference.")
+    (princ "Replaced Block Reference.")
     newObj
 )
 
@@ -261,7 +261,7 @@
 ;; @param filepath [STR] can either be an actual filepath, or the name of a block reference in your AutoCAD block library
 ;; @returns [#<VLA-OBJECT IAcadBlockReference] the inserted block reference
 (defun InsertBlockReference (doc chooseSpace filepath / choice blk)
-    (PrintIf "Start InsertBlockReference -- ")
+    (print "Start InsertBlockReference -- ")
     (setq choice
         (cond
             ((eq chooseSpace 'PAPER)(vla-get-PaperSpace doc))
@@ -278,7 +278,7 @@
             0.0
         )
     )
-    (PrincIf "Block reference inserted.")
+    (princ "Block reference inserted.")
     blk
 )
 
@@ -286,7 +286,7 @@
 ;; @param oldObj [#<VLA-OBJECT IAcadBlockReference] source block reference
 ;; @param newobj [#<VLA-OBJECT IAcadBlockReference] target block reference
 (defun CopyBlockAttributes (oldObj newObj / oldMap att val)
-    (PrincIf "Start CopyBlockAttributes -- ")
+    (princ "Start CopyBlockAttributes -- ")
     
     ;; Build a TAG -> VALUE map for old block
     (setq oldMap nil)
@@ -311,7 +311,7 @@
     )
 
     (vla-Update newObj)
-    (PrincIf "Done copying block attributes.")
+    (princ "Done copying block attributes.")
     (princ)
 )
 
@@ -323,7 +323,7 @@
 ;; @param folder [STR] - a file directory
 ;; @returns [LIST] a list of strings
 (defun GetAllDwgs (folder / result item fullpath)
-    (PrintIf "Start GetAllDwgs -- ")
+    (print "Start GetAllDwgs -- ")
 	; Initialize list of DWG file paths
 	(setq result '())
 
@@ -342,23 +342,6 @@
 			)
 		)
 	)
-	(PrincIf (strcat "\nFound " (itoa (length result)) " DWGs in directory " folder "\n"))
+	(princ (strcat "\nFound " (itoa (length result)) " DWGs in directory " folder "\n"))
 	result
-)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; DEBUGGING
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Wrapper for the princ function. Only runs princ if *DEBUG_MODE* is set to T
-;; @param str [STR] string to princ
-(defun PrincIf (str /)
-	(if *DEBUG_MODE* (princ str))
-	(princ)
-)
-;; Wrapper for the print function. Only runs print if *DEBUG_MODE* is set to T
-;; @param str [STR] string to print
-(defun PrintIf (str /)
-	(if *DEBUG_MODE* (print str))
-	(princ)
 )

@@ -21,7 +21,7 @@
 
 ;;
 (defun CreateDSDs (directory makeDsdCopyDir monochromeFilepath / dsdFilepaths subFolders folder dsdFilepath files file dsdfp count dsdCopyDir dsdCopyDirFilepath)
-	(PrintIf "Start CreateDSDs -- ")
+	(print "Start CreateDSDs -- ")
 	(if (null monochromeFilepath)
 		(setq monochromeFilepath (getfiled "Select Grayscale DWG" "" "dwg" 0))
 	)
@@ -94,7 +94,7 @@
 			)
 		)
 	)
-	(PrincIf (strcat "DSD created for " (itoa (length subFolders)) " subfolders.\n"))
+	(princ (strcat "DSD created for " (itoa (length subFolders)) " subfolders.\n"))
 	; Return list in original order
 	(reverse dsdFilepaths)
 )

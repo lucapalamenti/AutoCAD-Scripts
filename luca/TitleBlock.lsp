@@ -42,7 +42,7 @@
 ;; Returns the Title Block of a given document as a VLA-OBJECT
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 (defun GetTitleBlock (doc / obj result)
-    (PrintIf "Finding title block -- ")
+    (print "Finding title block -- ")
 
     (if (null doc)
         (setq doc (GetActiveDoc))
@@ -67,7 +67,7 @@
 
     (if (null result)
         (princ "No title block found.")
-		(PrincIf "Title block found.")
+		(princ "Title block found.")
     )
     result
 )
@@ -112,7 +112,7 @@
 ;; @param ScaleX [REAL]
 ;; @param ScaleY [REAL]
 (defun FormatTitleBlock (doc choice ScaleX ScaleY / insPt tb)
-	(PrintIf "Start FormatTitleBlock -- ")
+	(print "Start FormatTitleBlock -- ")
 	; Move Title block to PAPER space and center it
 	(setq tb (GetTitleBlock doc))
 	(if tb
@@ -135,7 +135,7 @@
 		)
 		(princ "No title block found in the drawing.")
 	)
-	(PrincIf "End FormatTitleBlock")
+	(princ "End FormatTitleBlock")
 	(princ)
 )
 
@@ -150,9 +150,9 @@
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 ;; @param choice [STR] ShopBMS or PanelBMS
 (defun ReplaceTitleBlock (doc choice / tb)
-	(PrintIf "Start ReplaceTitleBlock -- ")
+	(print "Start ReplaceTitleBlock -- ")
 	(cond
-		((null doc) (PrincIf "doc param not provided!"))
+		((null doc) (princ "doc param not provided!"))
 	)
 	(if (null choice)
 		(progn
@@ -163,7 +163,7 @@
 		)
 	)
 
-	(PrincIf "Replacing Title Block.")
+	(princ "Replacing Title Block.")
 
 	(setq tb (GetTitleBlock doc))
 	
@@ -176,7 +176,7 @@
 			(setq tb (ReplaceBlockReference doc 'PAPER tb *BMS_PNL_DWG_TITLEBLOCK_FILEPATH*))
 		)
 	)
-	(PrincIf (strcat "\nReplaced " choice " Title Block."))
+	(princ (strcat "\nReplaced " choice " Title Block."))
 	tb
 )
 
@@ -184,12 +184,12 @@
 ;; @param doc [#<VLA-OBJECT IAcadDocument>] a document object
 ;; @param tb [#<VLA-OBJECT IAcadBlockReference] the title block object
 (defun TitleBlockAttCorrections (doc tb choice / filename att)
-	(PrintIf "Start MatchTitleBlockDWGNo -- ")
+	(print "Start MatchTitleBlockDWGNo -- ")
 	(cond
 		; Ensure all parameters are given
-		((null doc) (PrincIf "doc param not provided!"))
-		((null tb) (PrincIf "tb param not provided!"))
-		((null choice) (PrincIf "choice param not provided!"))
+		((null doc) (princ "doc param not provided!"))
+		((null tb) (princ "tb param not provided!"))
+		((null choice) (princ "choice param not provided!"))
 		(T
 			(setq filename (vl-filename-base (vla-get-Name doc)))
 			(foreach att (vlax-invoke tb 'GetAttributes)
@@ -212,7 +212,7 @@
 			)
 		)
 	)
-	(PrincIf "End MatchTitleBlockDWGNo.")
+	(princ "End MatchTitleBlockDWGNo.")
 	(princ)
 )
 ;; Converts a drawing filename to the AB_CADFILE attribute (CAD Part) for a title block
