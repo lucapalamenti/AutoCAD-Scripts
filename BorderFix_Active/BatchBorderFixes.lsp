@@ -39,16 +39,21 @@
     )
     (princ)
 )
-(defun c:BMSShopStartScript (/ tbfilepath)
-    (setq tbfilepath nil)
-    (if (null tbfilepath)
-        (setq tbfilepath (getfiled "Select filepath for BMS Shop Title Block: " "" "dwg" 0))
+(defun c:BMSShop_Single (/)
+    (setq tbFilepath (getfiled "Select filepath for BMS Shop Title Block: " "" "dwg" 0))
+    (WorkScript (GetActiveDoc) tbFilepath 1 1)
+    (princ)
+)
+(defun c:BMSShopStartScript (/ tbFilepath)
+    (setq tbFilepath nil)
+    (if (null tbFilepath)
+        (setq tbFilepath (getfiled "Select filepath for BMS Shop Title Block: " "" "dwg" 0))
     )
     (ApplyToAll
         nil  
         'WorkScript
         (list
-            tbfilepath
+            tbFilepath
             1
             1
         )
@@ -345,3 +350,10 @@
 	(princ (strcat "\nFound " (itoa (length result)) " DWGs in directory " folder "\n"))
 	result
 )
+
+
+;;;;;;;;
+;;; MISC
+;;;;;;;;
+
+(defun GetActiveDoc (/) (vla-get-ActiveDocument (vlax-get-acad-object)))
